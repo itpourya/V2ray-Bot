@@ -6,8 +6,12 @@ COPY go.* ./
 RUN go mod download
 
 COPY . .
-RUN go build -o bin .
+RUN go build -o /app/app .
 
 FROM alpine:3.13.1
+RUN apk add --no-cache tzdata
+ENV TZ=Asia/Tehran
+WORKDIR /app
+COPY --from=builder /app/app .
 
-CMD ["/app/bin"]
+CMD ["/app/app"]

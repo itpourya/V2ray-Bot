@@ -1,9 +1,7 @@
 package main
 
-import "github.com/itpourya/Haze/app"
-
 func main() {
-	app := app.GenarateAPP()
+	app := GenarateAPP()
 
 	go app.Start()
 

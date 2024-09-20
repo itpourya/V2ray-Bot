@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/itpourya/Haze/cache"
+	"github.com/itpourya/Haze/app/cache"
 )
 
 func Validate(data string, userID string) cache.CachePayload {

@@ -5,8 +5,8 @@ import (
 	"hash/fnv"
 	"strconv"
 
-	"github.com/itpourya/Haze/entity"
-	"github.com/itpourya/Haze/repository"
+	"github.com/itpourya/Haze/app/entity"
+	"github.com/itpourya/Haze/app/repository"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

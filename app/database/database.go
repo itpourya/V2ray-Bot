@@ -3,7 +3,7 @@ package database
 import (
 	"log"
 
-	"github.com/itpourya/Haze/entity"
+	"github.com/itpourya/Haze/app/entity"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )

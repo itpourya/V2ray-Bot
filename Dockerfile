@@ -12,7 +12,6 @@ FROM alpine:3.13.1
 RUN apk add --no-cache tzdata
 ENV TZ=Asia/Tehran
 WORKDIR /app
-COPY .env .
 COPY --from=builder /app/app .
 
 CMD ["/app/app"]

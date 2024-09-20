@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/itpourya/Haze/serializer"
+	"github.com/itpourya/Haze/app/serializer"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

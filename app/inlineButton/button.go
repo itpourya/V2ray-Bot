@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/itpourya/Haze/entity"
-	"github.com/itpourya/Haze/serializer"
+	"github.com/itpourya/Haze/app/entity"
+	"github.com/itpourya/Haze/app/serializer"
 	"gopkg.in/telebot.v3"
 )
 

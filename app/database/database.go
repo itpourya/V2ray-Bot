@@ -10,11 +10,11 @@ import (
 )
 
 var (
-	database = "postgres"
-	password = "docker"
-	username = "postgres"
+	database = "haze_db"
+	password = "hazeasmin1234"
+	username = "admin"
 	port     = "5432"
-	host     = "localhost"
+	host     = "haze_database"
 )
 
 func New() *gorm.DB {

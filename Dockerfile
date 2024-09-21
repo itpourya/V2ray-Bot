@@ -10,8 +10,8 @@ RUN go mod download
 # Copy the rest of the application code
 COPY . .
 
-# Build the application
-RUN  go build -o telebot .
+# Build the application as a static binary
+RUN CGO_ENABLED=0 go build -o telebot . && ls -l /app
 
 # Stage 2: Create a minimal image for the application
 FROM alpine:latest
@@ -29,6 +29,13 @@ WORKDIR /root/
 
 # Copy the built application from the builder stage
 COPY --from=builder /app/telebot .
+
+# Ensure the binary is executable
+RUN chmod +x ./telebot
+
+# Create a non-root user
+RUN adduser -D appuser
+USER appuser
 
 # Command to run the application
 CMD ["./telebot"]

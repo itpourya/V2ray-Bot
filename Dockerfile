@@ -1,17 +1,34 @@
-FROM golang:1.19.0-alpine3.16 as builder
+# Stage 1: Build the Go application
+FROM golang:1.20 AS builder
 
 WORKDIR /app
 
-COPY go.* ./
+# Copy go.mod and go.sum files for dependency resolution
+COPY go.mod go.sum ./
 RUN go mod download
 
+# Copy the rest of the application code
 COPY . .
-RUN go build -o /app/app .
 
-FROM alpine:3.13.1
+# Build the application
+RUN  go build -o telebot .
+
+# Stage 2: Create a minimal image for the application
+FROM alpine:latest
+
+# Install timezone data
 RUN apk add --no-cache tzdata
-ENV TZ=Asia/Tehran
-WORKDIR /app
-COPY --from=builder /app/app .
 
-CMD ["/app/app"]
+# Set the timezone environment variable
+ENV TZ=Asia/Tehran
+
+# Set the working directory
+WORKDIR /root/
+
+# Copy the .env file
+
+# Copy the built application from the builder stage
+COPY --from=builder /app/telebot .
+
+# Command to run the application
+CMD ["./telebot"]

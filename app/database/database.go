@@ -1,17 +1,27 @@
 package database
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/itpourya/Haze/app/entity"
-	"gorm.io/driver/sqlite"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
+var (
+	database = "postgres"
+	password = "docker"
+	username = "postgres"
+	port     = "5432"
+	host     = "localhost"
+)
+
 func New() *gorm.DB {
-	db, err := gorm.Open(sqlite.Open("gorm.db"), &gorm.Config{})
+	connStr := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s TimeZone=Asia/Tehran", host, username, password, database, port)
+	db, err := gorm.Open(postgres.Open(connStr), &gorm.Config{})
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("NewDB: ", err)
 	}
 
 	err = db.AutoMigrate(&entity.Product{}, &entity.User{}, &entity.Wallet{})

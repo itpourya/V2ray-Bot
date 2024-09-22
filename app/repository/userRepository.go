@@ -40,7 +40,7 @@ func (marz *apiRepository) CreateUser(userID string, userSub string) error {
 func (marz *apiRepository) GetUser(userID string) []entity.User {
 	var user []entity.User
 
-	_ = marz.db.Model(&entity.User{}).Where("user_id == ?", userID).Find(&user)
+	_ = marz.db.Model(&entity.User{}).Where("user_id = ?", userID).Find(&user)
 
 	return user
 }

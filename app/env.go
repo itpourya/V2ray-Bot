@@ -7,6 +7,6 @@ import (
 )
 
 var (
-	TOKEN  = "7517309635:AAEQBzrbNsC3T-scPjqHix-jwUq8P04DXwk"
+	TOKEN  = "6466071910:AAEkVNnmsVrnfSmDfpmeEcSR-tT4phRvgNY"
 	POLLER = &telebot.LongPoller{Timeout: 1 * time.Second}
 )

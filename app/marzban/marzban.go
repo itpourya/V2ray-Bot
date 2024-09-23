@@ -255,7 +255,7 @@ func auth() (string, error) {
 func CreateTime() int64 {
 	now := time.Now()
 	futureDate := now.AddDate(0, 1, 0)
-	timestamp := time.Date(futureDate.Year(), futureDate.Month(), 16, 0, 0, 0, 0, time.UTC)
+	timestamp := time.Date(futureDate.Year(), futureDate.Month(), futureDate.Day(), 0, 0, 0, 0, time.UTC)
 
 	t := timestamppb.New(timestamp).Seconds
 	return t

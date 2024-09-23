@@ -73,7 +73,7 @@ func inline(ctx telebot.Context) error {
 								🔋حجم سرویس: `+validate.DataLimitCharge+`
 								⏰ مدت سرویس: 30 روز
 
-								subscription : `+`https://marz.ikernel.ir:8000/`+response.SubscriptionURL+`
+								subscription : `+`https://marz.ikernel.ir:8000`+response.SubscriptionURL+`
 											`)
 		}
 

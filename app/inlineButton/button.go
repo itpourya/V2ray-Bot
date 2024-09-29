@@ -7,7 +7,6 @@ import (
 
 	"github.com/itpourya/Haze/app/entity"
 	"github.com/itpourya/Haze/app/serializer"
-	"gopkg.in/telebot.v3"
 )
 
 func Start() (string, *telebot.ReplyMarkup) {
@@ -143,7 +142,7 @@ func Send() string {
 func Me(userData serializer.Response) (string, *telebot.ReplyMarkup) {
 	status := userData.Status
 	configName := userData.Username
-	link := "https://marz.ikernel.ir:8000" + userData.SubscriptionURL
+	link := "https://marz.redzedshop.ir:8000" + userData.SubscriptionURL
 	buyTime := strings.Replace(userData.CreatedAt[0:10], "-", "/", 2)
 	expire := validateTime(userData.Expire)
 	dataLimit := validateDataLimit(userData.DataLimit)

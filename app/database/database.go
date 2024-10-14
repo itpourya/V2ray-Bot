@@ -3,22 +3,21 @@ package database
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/itpourya/Haze/app/entity"
+	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-var (
-	database = "haze_db"
-	password = "hazeasmin1234"
-	username = "admin"
-	port     = "5432"
-	host     = "haze_database"
-)
-
 func New() *gorm.DB {
-	connStr := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s TimeZone=Asia/Tehran", host, username, password, database, port)
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatal("Can't load database envirement file")
+	}
+
+	connStr := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s TimeZone=Asia/Tehran", os.Getenv("DB_HOST"), os.Getenv("DB_Username"), os.Getenv("DB_PASSWORD"), os.Getenv("DATABASE"), os.Getenv("DB_PORT"))
 	db, err := gorm.Open(postgres.Open(connStr), &gorm.Config{})
 	if err != nil {
 		log.Fatal("NewDB: ", err)

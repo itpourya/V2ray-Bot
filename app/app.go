@@ -5,13 +5,14 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"time"
 
 	"golang.org/x/net/proxy"
 
 	"gopkg.in/telebot.v3"
 )
 
-func GenarateAPP() *telebot.Bot {
+func GenarateAPP(token string) *telebot.Bot {
 	transport := &http.Transport{}
 	proxyurl := "localhost:12334"
 	dialer, err := proxy.SOCKS5("tcp", proxyurl, nil, proxy.Direct)
@@ -27,8 +28,8 @@ func GenarateAPP() *telebot.Bot {
 
 	setings := telebot.Settings{
 		Client: cl,
-		Token:  TOKEN,
-		Poller: POLLER,
+		Token:  token,
+		Poller: &telebot.LongPoller{Timeout: 1 * time.Second},
 	}
 
 	app, err := telebot.NewBot(setings)

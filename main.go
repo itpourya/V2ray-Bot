@@ -1,9 +1,20 @@
 package main
 
-import "github.com/itpourya/Haze/app"
+import (
+	"log"
+	"os"
+
+	"github.com/itpourya/Haze/app"
+	"github.com/joho/godotenv"
+)
 
 func main() {
-	app := app.GenarateAPP()
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatal("Can't load robot token envirement file")
+	}
+
+	app := app.GenarateAPP(os.Getenv("TOKEN"))
 
 	go app.Start()
 

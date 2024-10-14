@@ -7,6 +7,7 @@ import (
 
 	"github.com/itpourya/Haze/app/entity"
 	"github.com/itpourya/Haze/app/serializer"
+	"gopkg.in/telebot.v3"
 )
 
 func Start() (string, *telebot.ReplyMarkup) {

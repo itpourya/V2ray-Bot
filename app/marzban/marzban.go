@@ -266,24 +266,24 @@ func CreateTime() int64 {
 	return t
 }
 
-func GenerateData(data_limit int) int {
-	if data_limit == 10 {
+func GenerateData(dataLimit int) int {
+	if dataLimit == 10 {
 		return DATA_LIMIT_10GB
 	}
 
-	if data_limit == 15 {
+	if dataLimit == 15 {
 		return DATA_LIMIT_15GB
 	}
 
-	if data_limit == 20 {
+	if dataLimit == 20 {
 		return DATA_LIMIT_20GB
 	}
 
-	if data_limit == 50 {
+	if dataLimit == 50 {
 		return DATA_LIMIT_50GB
 	}
 
-	if data_limit == 100 {
+	if dataLimit == 100 {
 		return DATA_LIMIT_100GB
 	}
 

@@ -198,7 +198,12 @@ func (m *marzban) DataLimitUpdate(username string, charge string) error {
 	if err != nil {
 		return errors.New("FAILED PUT REQUEST | " + API_GET_USER + " " + err.Error())
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			log.Println("FAILED CLOSE REQUEST | " + API_GET_USER)
+		}
+	}(resp.Body)
 
 	return nil
 }

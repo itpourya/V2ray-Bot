@@ -14,10 +14,10 @@ import (
 func New() *gorm.DB {
 	err := godotenv.Load(".env")
 	if err != nil {
-		log.Fatal("Can't load database envirement file")
+		log.Fatal("Can't load database environment file")
 	}
 
-	connStr := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s TimeZone=Asia/Tehran", os.Getenv("DB_HOST"), os.Getenv("DB_Username"), os.Getenv("DB_PASSWORD"), os.Getenv("DATABASE"), os.Getenv("DB_PORT"))
+	connStr := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s TimeZone=Asia/Tehran", os.Getenv("DB_HOST"), os.Getenv("DB_USERNAME"), os.Getenv("DB_PASSWORD"), os.Getenv("DATABASE"), os.Getenv("DB_PORT"))
 	db, err := gorm.Open(postgres.Open(connStr), &gorm.Config{})
 	if err != nil {
 		log.Fatal("NewDB: ", err)

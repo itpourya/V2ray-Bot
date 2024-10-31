@@ -3,6 +3,8 @@ module github.com/itpourya/Haze
 go 1.20
 
 require (
+	github.com/joho/godotenv v1.5.1
+	github.com/redis/go-redis/v9 v9.6.1
 	golang.org/x/net v0.24.0
 	google.golang.org/protobuf v1.28.0
 	gopkg.in/telebot.v3 v3.3.8
@@ -19,11 +21,9 @@ require (
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
-	github.com/joho/godotenv v1.5.1 // indirect
-	github.com/redis/go-redis/v9 v9.6.1 // indirect
 	github.com/stretchr/testify v1.8.4 // indirect
 	golang.org/x/crypto v0.22.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/text v0.18.0 // indirect
-	gopkg.in/telebot.v4 v4.0.0-beta.2 // indirect
+	gopkg.in/telebot.v4 v4.0.0-beta.4 // indirect
 )

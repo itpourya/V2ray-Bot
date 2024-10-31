@@ -2,12 +2,11 @@ package inlinebutton
 
 import (
 	"fmt"
-	"strings"
-	"time"
-
 	"github.com/itpourya/Haze/app/entity"
 	"github.com/itpourya/Haze/app/serializer"
-	"gopkg.in/telebot.v3"
+	"gopkg.in/telebot.v4"
+	"strings"
+	"time"
 )
 
 func Start() (string, *telebot.ReplyMarkup) {
@@ -146,7 +145,7 @@ func Me(userData serializer.Response) (string, *telebot.ReplyMarkup) {
 	link := "https://marz.redzedshop.ir:8000" + userData.SubscriptionURL
 	buyTime := strings.Replace(userData.CreatedAt[0:10], "-", "/", 2)
 	expire := validateTime(userData.Expire)
-	dataLimit := validateDataLimit(userData.DataLimit)
+	dataLimit := validateDataLimit(userData.DataLimit - userData.UsedTraffic)
 
 	text := `وضعیت کانفیگ: ` + status + `🟢
 

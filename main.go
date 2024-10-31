@@ -11,12 +11,12 @@ import (
 func main() {
 	err := godotenv.Load(".env")
 	if err != nil {
-		log.Fatal("Can't load robot token envirement file")
+		log.Fatal("Can't load robot token environment file")
 	}
 
-	app := app.GenarateAPP(os.Getenv("TOKEN"))
+	tgApp := app.GenerateAPP(os.Getenv("TOKEN"))
 
-	go app.Start()
+	go tgApp.Start()
 
 	ch := make(chan struct{})
 	<-ch

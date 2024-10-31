@@ -11,7 +11,7 @@ import (
 func NewCache() *redis.Client {
 	err := godotenv.Load(".env")
 	if err != nil {
-		log.Fatal("Can't load cache envirement file")
+		log.Fatal("Can't load cache environment file")
 	}
 
 	rdb := redis.NewClient(&redis.Options{

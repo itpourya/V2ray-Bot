@@ -44,6 +44,6 @@ type ExcludedInbounds struct {
 type Admin struct {
 	Username       string  `json:"username"`
 	IsSudo         bool    `json:"is_sudo"`
-	TelegramID     *string `json:"telegram_id"`     // Pointer to handle null
+	TelegramID     string  `json:"telegram_id"`     // Pointer to handle null
 	DiscordWebhook *string `json:"discord_webhook"` // Pointer to handle null
 }

@@ -160,6 +160,7 @@ func (m *marzban) DataLimitUpdate(username string, charge string) error {
 	client := &http.Client{}
 
   user.DataLimit = chargeDataLimit(user.DataLimit, charge)
+  user.Status = "active"
 
   data := strings.NewReader(fmt.Sprint(user))
 

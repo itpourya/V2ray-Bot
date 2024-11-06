@@ -125,23 +125,14 @@ func (m *marzban) GetUser(username string) (serializer.Response, string, error) 
 func (m *marzban) ExpireUpdate(userID string) error {
 	var resp *http.Response
 	user, token, _ := m.GetUser(userID)
-	expire := fmt.Sprint(chargeMonth(user.Expire))
+	expire := chargeMonth(user.Expire)
 	client := &http.Client{}
-	data := strings.NewReader(`{
-		  "proxies": {
-		    "vless": {}
-		  },
-		  "inbounds": {
-		    "vless": []
-		  },
-		  "expire": ` + expire + `,
-		  "data_limit": ` + fmt.Sprint(user.DataLimit) + `,
-		  "data_limit_reset_strategy": "no_reset",
-		  "status": "active",
-		  "note": "",
-		  "on_hold_timeout": "2023-11-03T20:30:00",
-		  "on_hold_expire_duration": 0
-		}`)
+
+  user.Expire = expire
+  user.Status = "active"
+
+  data := strings.NewReader(fmt.Sprint(user))
+
 	req, err := http.NewRequest("PUT", API_GET_USER+userID, data)
 	if err != nil {
 		return errors.New("FAILED CREATE PUT REQUEST | " + API_GET_USER + " " + err.Error())
@@ -167,21 +158,11 @@ func (m *marzban) DataLimitUpdate(username string, charge string) error {
 	var resp *http.Response
 	user, token, _ := m.GetUser(username)
 	client := &http.Client{}
-	data := strings.NewReader(`{
-		  "proxies": {
-		    "vless": {}
-		  },
-		  "inbounds": {
-		    "vless": []
-		  },
-		  "expire": ` + fmt.Sprint(user.Expire) + `,
-		  "data_limit": ` + fmt.Sprint(chargeDataLimit(user.DataLimit, charge)) + `,
-		  "data_limit_reset_strategy": "no_reset",
-		  "status": "active",
-		  "note": "",
-		  "on_hold_timeout": "2023-11-03T20:30:00",
-		  "on_hold_expire_duration": 0
-		}`)
+
+  user.DataLimit = chargeDataLimit(user.DataLimit, charge)
+
+  data := strings.NewReader(fmt.Sprint(user))
+
 	req, err := http.NewRequest("PUT", API_GET_USER+username, data)
 	if err != nil {
 		return errors.New("FAILED CREATE PUT REQUEST | " + API_GET_USER + " " + err.Error())

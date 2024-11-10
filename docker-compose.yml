@@ -1,6 +1,6 @@
 services:
   cache:
-    container_name: "haze_cache"
+    container_name: haze_cache
     image: redis:latest
     restart: always
     ports:

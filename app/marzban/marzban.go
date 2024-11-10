@@ -1,9 +1,11 @@
 package marzban
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/itpourya/Haze/app/validator"
 	"io"
 	"log"
 	"net/http"
@@ -11,16 +13,22 @@ import (
 	"strings"
 	"time"
 
+	"github.com/itpourya/Haze/app/cache"
 	"github.com/itpourya/Haze/app/serializer"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type Marzban interface {
-	CreateUserAccount(userID string, data_limit int) (serializer.Response, error)
+	CreateUserAccount(userID string, dataLimit int) (serializer.Response, error)
 	GetUser(userID string) (serializer.Response, string, error)
 	ExpireUpdate(userID string) error
 	DataLimitUpdate(userID string, charge string) error
 }
+
+var (
+	ctxb = context.Background()
+	rdp  = cache.NewCache()
+)
 
 type marzban struct{}
 
@@ -28,9 +36,9 @@ func NewMarzbanClient() Marzban {
 	return &marzban{}
 }
 
-func (m *marzban) CreateUserAccount(username string, data_limit int) (serializer.Response, error) {
+func (m *marzban) CreateUserAccount(username string, dataLimit int) (serializer.Response, error) {
 	expire := fmt.Sprint(CreateTime())
-	limit := strconv.Itoa(GenerateData(data_limit))
+	limit := strconv.Itoa(GenerateData(dataLimit))
 	var resp *http.Response
 	var response serializer.Response
 
@@ -74,19 +82,30 @@ func (m *marzban) CreateUserAccount(username string, data_limit int) (serializer
 	}
 
 	body, _ := io.ReadAll(resp.Body)
-	json.Unmarshal(body, &response)
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		log.Println(err)
+	}
 
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			log.Println(err)
+		}
+	}(resp.Body)
 	return response, nil
 }
 
 func (m *marzban) GetUser(username string) (serializer.Response, string, error) {
 	var resp *http.Response
 	var response serializer.Response
-	token, err := auth()
-	if err != nil {
-		log.Println(err)
-		return response, "", err
+	var token string
+
+	data := rdp.Get(ctxb, "TOKEN")
+	if strings.HasPrefix(data.String(), "redis") {
+		token, _ = auth()
+	} else {
+		token = fmt.Sprint(validator.ValidateAuth(data.String()))
 	}
 
 	req, err := http.NewRequest("GET", API_GET_USER+username, nil)
@@ -100,7 +119,7 @@ func (m *marzban) GetUser(username string) (serializer.Response, string, error) 
 	client := http.Client{}
 	resp, err = client.Do(req)
 	if resp == nil {
-		return response, token, errors.New("FAILD REQUEST | " + API_GET_USER)
+		return response, token, errors.New("FAILED REQUEST | " + API_GET_USER)
 	}
 	if err != nil {
 		log.Println(err)
@@ -128,10 +147,10 @@ func (m *marzban) ExpireUpdate(userID string) error {
 	expire := chargeMonth(user.Expire)
 	client := &http.Client{}
 
-  user.Expire = expire
-  user.Status = "active"
+	user.Expire = expire
+	user.Status = "active"
 
-  data := strings.NewReader(fmt.Sprint(user))
+	data := strings.NewReader(fmt.Sprint(user))
 
 	req, err := http.NewRequest("PUT", API_GET_USER+userID, data)
 	if err != nil {
@@ -149,7 +168,12 @@ func (m *marzban) ExpireUpdate(userID string) error {
 	if err != nil {
 		return errors.New("FAILED PUT REQUEST | " + API_GET_USER + " " + err.Error())
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			log.Println(err)
+		}
+	}(resp.Body)
 
 	return nil
 }
@@ -159,10 +183,10 @@ func (m *marzban) DataLimitUpdate(username string, charge string) error {
 	user, token, _ := m.GetUser(username)
 	client := &http.Client{}
 
-  user.DataLimit = chargeDataLimit(user.DataLimit, charge)
-  user.Status = "active"
+	user.DataLimit = chargeDataLimit(user.DataLimit, charge)
+	user.Status = "active"
 
-  data := strings.NewReader(fmt.Sprint(user))
+	data := strings.NewReader(fmt.Sprint(user))
 
 	req, err := http.NewRequest("PUT", API_GET_USER+username, data)
 	if err != nil {
@@ -234,7 +258,19 @@ func auth() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			log.Println(err)
+		}
+	}(resp.Body)
+
+	var cacheAuthToken cache.CacheAuthToken
+	cacheAuthToken.AuthToken = jsonData.AccessToen
+	cacheMsg := rdp.Set(ctxb, "TOKEN", cacheAuthToken, time.Duration(1*time.Hour))
+	if cacheMsg != nil {
+		log.Println(err)
+	}
 
 	return jsonData.AccessToen, nil
 }

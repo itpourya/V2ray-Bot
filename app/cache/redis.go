@@ -8,6 +8,7 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+// NewCache creates a new redis client
 func NewCache() *redis.Client {
 	err := godotenv.Load(".env")
 	if err != nil {

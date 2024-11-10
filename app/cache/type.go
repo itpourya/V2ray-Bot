@@ -13,6 +13,14 @@ type CachePayload struct {
 	Price           int64
 }
 
+type CacheAuthToken struct {
+  AuthToken           string
+}
+
 func (i CachePayload) MarshalBinary() ([]byte, error) {
+	return json.Marshal(i)
+}
+
+func (i CacheAuthToken) MarshalBinary() ([]byte, error) {
 	return json.Marshal(i)
 }

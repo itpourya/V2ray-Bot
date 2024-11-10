@@ -8,6 +8,7 @@ require (
 	golang.org/x/net v0.24.0
 	google.golang.org/protobuf v1.28.0
 	gopkg.in/telebot.v3 v3.3.8
+	gopkg.in/telebot.v4 v4.0.0-beta.4
 	gorm.io/driver/postgres v1.5.9
 	gorm.io/gorm v1.25.12
 )
@@ -25,5 +26,4 @@ require (
 	golang.org/x/crypto v0.22.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/text v0.18.0 // indirect
-	gopkg.in/telebot.v4 v4.0.0-beta.4 // indirect
 )

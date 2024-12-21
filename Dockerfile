@@ -26,7 +26,7 @@ ENV TZ=Asia/Tehran
 WORKDIR /root/
 
 # Copy the .env file
-COPY app/.env .
+COPY .env .
 
 # Copy the built application from the builder stage
 COPY --from=builder /app/telebot .

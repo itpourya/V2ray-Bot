@@ -26,8 +26,8 @@ ENV TZ=Asia/Tehran
 RUN addgroup --gid 1000 telebot \
     && adduser --disabled-password --ingroup telebot --shell /bin/sh telebot
 
-# Set the working directory
-WORKDIR /root/
+# Set the working directory to a non-root directory
+WORKDIR /home/telebot
 
 # Copy the .env file, set proper permissions, and set ownership to telebot
 COPY .env .

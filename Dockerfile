@@ -27,6 +27,7 @@ WORKDIR /root/
 
 # Copy the .env file
 COPY .env .
+RUN chmod 644 .env
 
 # Copy the built application from the builder stage
 COPY --from=builder /app/telebot .
@@ -35,9 +36,8 @@ COPY --from=builder /app/telebot .
 RUN chmod +x ./telebot
 
 # Create a non-root user
-RUN addgroup --gid 1000 telebot
-RUN adduser --ingroup telebot --shell /bin/sh telebot
-USER telebot
+RUN adduser -D appuser
+USER appuser
 
 # Command to run the application
 CMD ["./telebot"]

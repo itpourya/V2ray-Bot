@@ -21,6 +21,17 @@ services:
       - "5432:5432"
     networks:
       - hazenet
+  telebot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: telebot
+    networks:
+      - hazenet
+    depends_on:
+      - cache
+      - db
+    command: ["./telebot"] # Optional: Specify the binary to run
 
 networks:
   hazenet:

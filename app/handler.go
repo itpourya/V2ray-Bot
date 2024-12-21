@@ -3,11 +3,11 @@ package app
 import (
 	"context"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/charmbracelet/log"
 	"github.com/itpourya/Haze/app/cache"
 	"github.com/itpourya/Haze/app/database"
 	inlinebutton "github.com/itpourya/Haze/app/inlineButton"
@@ -28,10 +28,24 @@ var (
 )
 
 func start(ctx telebot.Context) error {
-	text, button := inlinebutton.Start()
-	err := userService.CreateUserWallet(fmt.Sprint(ctx.Sender().ID))
+	sender := strconv.Itoa(int(ctx.Sender().ID))
+
+	if IsManager(sender) {
+		text, button := inlinebutton.ManagerPannel()
+
+		return ctx.Send(text, button)
+	}
+
+	if IsAdmin(sender) {
+		text, button := inlinebutton.AdminPannel()
+
+		return ctx.Send(text, button)
+	}
+
+	text, button := inlinebutton.StartUpPannel()
+	err := userService.CreateUserWalletService(fmt.Sprint(ctx.Sender().ID))
 	if err != nil {
-		log.Println(err)
+		log.Error("Handler Error", err.Error())
 	}
 
 	return ctx.Send(text, button)
@@ -45,17 +59,147 @@ func text(ctx telebot.Context) error {
 		validate.ChargeWallet = ctx.Text()
 		err := rdb.Set(ctxb, fmt.Sprint(ctx.Sender().ID), validate, time.Duration(1*time.Hour))
 		if err != nil {
-			log.Println(err)
+			log.Info(err)
 		}
-		return ctx.Send(inlinebutton.Send())
+		return ctx.Send(inlinebutton.Settlement())
 	}
-	return ctx.Send("invalid")
+	return ctx.Send("خیلی ببخشید ولی نفهمیدم چی میخواین 🤔")
 }
 
 func inline(ctx telebot.Context) error {
 	command := ctx.Data()
 	userData := ctx.Sender()
 	userIDstr := strconv.Itoa(int(userData.ID))
+	AdminrecipientID := int64(6556338275)
+
+	if command == "ShowManagerList" {
+		managersList := userService.GetManagerListService()
+		text, button := inlinebutton.ManagerList(managersList)
+
+		return ctx.Edit(text, button)
+	}
+
+	if strings.HasPrefix(command, "mg-") {
+		managerUserID := strings.Replace(command, "mg-", "", 1)
+		manager := userService.GetManagerService(managerUserID)
+		text, button := inlinebutton.AdminManagerPannel(manager)
+
+		return ctx.Edit(text, button)
+	}
+
+	if strings.HasPrefix(command, "D-") {
+		managerUserID := strings.Replace(command, "D-", "", 1)
+		userService.ClearManagerDeptService(managerUserID)
+
+		return ctx.Edit("بدهی منیجر کاملا تسویه شد ✅")
+	}
+
+	if strings.HasSuffix(command, " month") {
+		dataCache := rdb.GetDel(ctxb, fmt.Sprint(userData.ID))
+		validate := validator.Validate(dataCache.String(), userIDstr)
+		validate.DateLimit = strings.Replace(command, " month", "", 1)
+		err := rdb.Set(ctxb, fmt.Sprint(userData.ID), validate, time.Duration(1*time.Hour))
+		if err != nil {
+			log.Info(err)
+		}
+
+		text, button := inlinebutton.Checkout(validate.Price, validate.DataLimitCharge, validate.DateLimit)
+
+		return ctx.Edit(text, button)
+	}
+
+	if command == "invoice" {
+		dept := userService.GetInvoiceService(userIDstr)
+		text, button := inlinebutton.InvoicePannel(dept)
+
+		return ctx.Edit(text, button)
+	}
+
+	if command == "CheckManager" {
+		manager := IsManager(userIDstr)
+		if manager {
+			data := rdb.GetDel(ctxb, userIDstr).String()
+			validate := validator.Validate(data, fmt.Sprint(userIDstr))
+			data_limit, _ := strconv.Atoi(strings.Replace(validate.DataLimitCharge, "GB", "", 1))
+
+			if validate.Buy {
+				username := userService.GenerateUsernameService(userIDstr)
+				response, _ := mrz.CreateMarzbanUser(username, int(data_limit), validate.DateLimit)
+				userService.IncreaseManagerDeptService(userIDstr, validate.Price)
+				return ctx.Send(`
+												😍 سفارش جدید شما
+									📡 پروتکل: vless
+									🔋حجم سرویس: ` + validate.DataLimitCharge + `
+									⏰ مدت سرویس: 30 روز
+
+									subscription : ` + `https://marz.ikernel.ir:8000` + response.SubscriptionURL + `
+												`)
+			}
+
+			if validate.Recharge {
+				err := mrz.DataLimitUpdate(validate.ConfigName, validate.DataLimitCharge)
+				if err != nil {
+					log.Info(err)
+				}
+
+				userService.IncreaseManagerDeptService(userIDstr, validate.Price)
+
+				ctx.Send("پرداخت شما با موفقیت انجام شد. حجم مورد نظر به سرویس شما اضافه شد")
+				return ctx.Delete()
+			}
+
+			if validate.Remonth {
+				err := mrz.ExpireUpdate(validate.ConfigName)
+				if err != nil {
+					log.Info(err)
+				}
+
+				userService.IncreaseManagerDeptService(userIDstr, validate.Price)
+
+				ctx.Send("پرداخت شما با موفقیت انجام شد. یک ماه به سرویس شما اضافه شد")
+				return ctx.Delete()
+			}
+		}
+	}
+
+	if command == "ManagerBuy" {
+		var payload cache.CachePayload
+		payload.Buy = true
+		payload.Manager = true
+		err := rdb.Set(ctxb, fmt.Sprint(userData.ID), payload, time.Duration(1*time.Hour))
+		if err != nil {
+			log.Info(err)
+		}
+
+		text, button := inlinebutton.DataLimitList()
+		return ctx.Edit(text, button)
+	}
+
+	if command == "sell" {
+		text := inlinebutton.ManagerAnswer()
+
+		ctx.Bot().Send(&telebot.Chat{ID: AdminrecipientID}, "Manager : "+userIDstr+" | "+userData.Username, &telebot.ReplyMarkup{
+			InlineKeyboard: [][]telebot.InlineButton{
+				{
+					{
+						Text: "Add",
+						Data: "add" + userIDstr,
+					},
+				},
+			},
+			OneTimeKeyboard: true,
+		})
+
+		return ctx.Send(text)
+	}
+
+	if strings.HasPrefix(command, "add") {
+		managerID := strings.Replace(command, "add", "", 1)
+		managerIDinteger, _ := strconv.Atoi(managerID)
+		userService.CreateManagerService(managerID)
+		ctx.Bot().Send(&telebot.Chat{ID: int64(managerIDinteger)}, "تبریک میگم شما به عنوان مدیر فروش در ربات ما ثبت شدین، میتونین با اجرای دوباره ی ربات به پنل مدیریت مدیر های فروش دسترسی داشته باشین ❤️")
+		return ctx.Delete()
+	}
 
 	if strings.HasPrefix(command, "user") {
 		userID := strings.Replace(command, "user", "", 1)
@@ -65,8 +209,8 @@ func inline(ctx telebot.Context) error {
 		data_limit, _ := strconv.Atoi(strings.Replace(validate.DataLimitCharge, "GB", "", 1))
 
 		if validate.Buy {
-			username := userService.CreateUsername(userID)
-			response, _ := mrz.CreateUserAccount(username, int(data_limit))
+			username := userService.GenerateUsernameService(userID)
+			response, _ := mrz.CreateMarzbanUser(username, int(data_limit), validate.DateLimit)
 			ctx.Bot().Send(&telebot.Chat{ID: int64(recipientID)}, `
 											😍 سفارش جدید شما
 								📡 پروتکل: vless
@@ -80,7 +224,7 @@ func inline(ctx telebot.Context) error {
 		if validate.Recharge {
 			err := mrz.DataLimitUpdate(validate.ConfigName, validate.DataLimitCharge)
 			if err != nil {
-				log.Println(err)
+				log.Info(err)
 			}
 
 			_, _ = ctx.Bot().Send(&telebot.Chat{ID: int64(recipientID)}, "پرداخت شما با موفقیت انجام شد. حجم مورد نظر به سرویس شما اضافه شد")
@@ -90,7 +234,7 @@ func inline(ctx telebot.Context) error {
 		if validate.Remonth {
 			err := mrz.ExpireUpdate(validate.ConfigName)
 			if err != nil {
-				log.Println(err)
+				log.Info(err)
 			}
 
 			_, _ = ctx.Bot().Send(&telebot.Chat{ID: int64(recipientID)}, "پرداخت شما با موفقیت انجام شد. یک ماه به سرویس شما اضافه شد")
@@ -99,10 +243,9 @@ func inline(ctx telebot.Context) error {
 
 		if validate.ReChargeWallet && validate.ChargeWallet != "" {
 			charge, _ := strconv.Atoi(validate.ChargeWallet)
-			fmt.Println(charge)
-			err := userService.IncreaseUserBalance(userID, charge)
+			err := userService.IncreaseUserBalanceService(userID, charge)
 			if err != nil {
-				log.Println(err)
+				log.Info(err)
 			}
 
 			_, _ = ctx.Bot().Send(&telebot.Chat{ID: int64(recipientID)}, "پرداخت شما با موفقیت انجام شد. مبلغ مورد نظر به کیف شما اضافه شد🚀")
@@ -113,8 +256,8 @@ func inline(ctx telebot.Context) error {
 	}
 
 	if command == "wallet" {
-		userWallet := userService.GetUserWallet(userIDstr)
-		text, button := inlinebutton.ShowWallet(userWallet)
+		userWallet := userService.GetUserWalletService(userIDstr)
+		text, button := inlinebutton.WalletPannel(userWallet)
 
 		return ctx.Edit(text, button)
 	}
@@ -127,16 +270,16 @@ func inline(ctx telebot.Context) error {
 		payload.Remonth = false
 		err := rdb.Set(ctxb, fmt.Sprint(userData.ID), payload, time.Duration(1*time.Hour))
 		if err != nil {
-			log.Println(err)
+			log.Info(err)
 		}
 
-		return ctx.Edit(inlinebutton.Wallet())
+		return ctx.Edit(inlinebutton.ChargeWalletPannel())
 	}
 
 	if command == "paywallet" {
 		data := rdb.GetDel(ctxb, userIDstr)
 		validate := validator.Validate(data.String(), userIDstr)
-		err := userService.DicreaseUserBalance(userIDstr, int(validate.Price))
+		err := userService.DicreaseUserBalanceService(userIDstr, int(validate.Price))
 		if err != nil {
 			return ctx.Edit("شرمندت کیف پول شما موجودی کافی رو برای پرداخت نداره 🫠")
 		}
@@ -144,8 +287,8 @@ func inline(ctx telebot.Context) error {
 		data_limit, _ := strconv.Atoi(strings.Replace(validate.DataLimitCharge, "GB", "", 1))
 
 		if validate.Buy {
-			username := userService.CreateUsername(userIDstr)
-			response, _ := mrz.CreateUserAccount(username, int(data_limit))
+			username := userService.GenerateUsernameService(userIDstr)
+			response, _ := mrz.CreateMarzbanUser(username, int(data_limit), validate.DateLimit)
 			ctx.Bot().Send(&telebot.Chat{ID: int64(userData.ID)}, `
 											😍 سفارش جدید شما
 								📡 پروتکل: vless
@@ -159,7 +302,7 @@ func inline(ctx telebot.Context) error {
 		if validate.Recharge {
 			err := mrz.DataLimitUpdate(validate.ConfigName, validate.DataLimitCharge)
 			if err != nil {
-				log.Println(err)
+				log.Info(err)
 			}
 
 			_, _ = ctx.Bot().Send(&telebot.Chat{ID: int64(userData.ID)}, "پرداخت شما با موفقیت انجام شد. حجم مورد نظر به سرویس شما اضافه شد")
@@ -169,7 +312,7 @@ func inline(ctx telebot.Context) error {
 		if validate.Remonth {
 			err := mrz.ExpireUpdate(validate.ConfigName)
 			if err != nil {
-				log.Println(err)
+				log.Info(err)
 			}
 
 			_, _ = ctx.Bot().Send(&telebot.Chat{ID: int64(userData.ID)}, "پرداخت شما با موفقیت انجام شد. یک ماه به سرویس شما اضافه شد")
@@ -188,45 +331,56 @@ func inline(ctx telebot.Context) error {
 
 	if strings.HasPrefix(command, "retraffic") {
 		var payload cache.CachePayload
+		manager := IsManager(userIDstr)
+		if manager {
+			payload.Manager = true
+		}
 		payload.ConfigName = strings.Replace(command, "retraffic", "", 1)
 		payload.Remonth = false
 		payload.Recharge = true
 		payload.Buy = false
 		err := rdb.Set(ctxb, fmt.Sprint(userData.ID), payload, time.Duration(1*time.Hour))
 		if err != nil {
-			log.Println(err)
+			log.Info(err)
 		}
 
-		text, button := inlinebutton.Germany()
+		text, button := inlinebutton.DataLimitList()
 
 		return ctx.Edit(text, button)
 	}
 
 	if strings.HasPrefix(command, "gt-") {
 		username := strings.Replace(command, "gt-", "", 1)
-		user, _, err := mrz.GetUser(username)
+		user, _, err := mrz.GetMarzbanUser(username)
 		if err != nil {
-			log.Println(err)
+			log.Info(err)
 		}
 
-		text, button := inlinebutton.Me(user)
+		text, button := inlinebutton.ConfigPannel(user)
 
 		return ctx.Edit(text, button)
 	}
 
 	if strings.HasPrefix(command, "remonthpay") {
-		return ctx.Send(inlinebutton.Send())
+		return ctx.Send(inlinebutton.Settlement())
 	}
 
 	if strings.HasPrefix(command, "remonth") {
 		var payload cache.CachePayload
+		manager := IsManager(userIDstr)
+		if manager {
+			payload.Manager = true
+			payload.Price = 15000
+		} else {
+			payload.Price = 32000
+		}
 		payload.Buy = false
 		payload.Recharge = false
 		payload.Remonth = true
 		payload.ConfigName = strings.Replace(command, "remonth", "", 1)
 		err := rdb.Set(ctxb, userIDstr, payload, time.Duration(1*time.Hour))
 		if err != nil {
-			log.Println(err)
+			log.Info(err)
 		}
 		text, button := inlinebutton.Remonth()
 
@@ -234,9 +388,9 @@ func inline(ctx telebot.Context) error {
 	}
 
 	if command == "me" {
-		user := userService.GetUserByUserID(userIDstr)
+		user := userService.GetUserByUserIDService(userIDstr)
 
-		text, button := inlinebutton.ShowConfigsMe(user)
+		text, button := inlinebutton.ConfigList(user)
 		return ctx.Edit(text, button)
 	}
 
@@ -245,19 +399,19 @@ func inline(ctx telebot.Context) error {
 		payload.Buy = true
 		err := rdb.Set(ctxb, fmt.Sprint(userData.ID), payload, time.Duration(1*time.Hour))
 		if err != nil {
-			log.Println(err)
+			log.Info(err)
 		}
-		text, button := inlinebutton.Buy()
+		text, button := inlinebutton.Locations()
 		return ctx.Edit(text, button)
 	}
 
 	if command == "germany" {
-		text, button := inlinebutton.Germany()
+		text, button := inlinebutton.DataLimitList()
 		return ctx.Edit(text, button)
 	}
 
 	if command == "send" {
-		return ctx.Send(inlinebutton.Send())
+		return ctx.Send(inlinebutton.Settlement())
 	}
 
 	switch command {
@@ -266,203 +420,309 @@ func inline(ctx telebot.Context) error {
 		validate := validator.Validate(dataCache.String(), userIDstr)
 		if validate.Buy {
 			validate.DataLimitCharge = "10GB"
-			validate.Price = 28000
+			if validate.Manager {
+				validate.Price = 10000
+			} else {
+				validate.Price = 28000
+			}
 			err := rdb.Set(ctxb, fmt.Sprint(userData.ID), validate, time.Duration(1*time.Hour))
 			if err != nil {
-				log.Println(err)
+				log.Info(err)
 			}
 		}
 
 		if validate.Recharge {
 			validate.DataLimitCharge = "10GB"
-			validate.Price = 28000
+			if validate.Manager {
+				validate.Price = 10
+			} else {
+				validate.Price = 28000
+			}
 			err := rdb.Set(ctxb, fmt.Sprint(userData.ID), validate, time.Duration(1*time.Hour))
 			if err != nil {
-				log.Println(err)
+				log.Info(err)
 			}
+
+			text, button := inlinebutton.Checkout(validate.Price, validate.DataLimitCharge, validate.DateLimit)
+			return ctx.Edit(text, button)
 		}
-		return ctx.Edit(`
-		〽️ نام پلن: 10 گیگ
-        ➖➖➖➖➖➖➖
-        💎 قیمت پنل : 28,000 تومان
-        ➖➖➖➖➖➖➖
-		`, &telebot.ReplyMarkup{
-			InlineKeyboard: [][]telebot.InlineButton{
-				{
-					{
-						Text: "کارت به کارت 🏦",
-						Data: "send",
-					},
-				},
-				{
-					{
-						Text: "👝 پرداخت با کیف پول",
-						Data: "paywallet",
-					},
-				},
-			},
-		})
+
+		text, button := inlinebutton.DateLimitList()
+		return ctx.Edit(text, button)
 
 	case "15":
 		dataCache := rdb.GetDel(ctxb, fmt.Sprint(userData.ID))
 		validate := validator.Validate(dataCache.String(), userIDstr)
 		if validate.Buy {
 			validate.DataLimitCharge = "15GB"
-			validate.Price = 38000
+			if validate.Manager {
+				validate.Price = 15000
+			} else {
+				validate.Price = 38000
+			}
 			err := rdb.Set(ctxb, fmt.Sprint(userData.ID), validate, time.Duration(1*time.Hour))
 			if err != nil {
-				log.Println(err)
+				log.Info(err)
 			}
 		}
 
 		if validate.Recharge {
 			validate.DataLimitCharge = "15GB"
-			validate.Price = 38000
+			if validate.Manager {
+				validate.Price = 15000
+			} else {
+				validate.Price = 38000
+			}
 			err := rdb.Set(ctxb, fmt.Sprint(userData.ID), validate, time.Duration(1*time.Hour))
 			if err != nil {
-				log.Println(err)
+				log.Info(err)
 			}
+
+			text, button := inlinebutton.Checkout(validate.Price, validate.DataLimitCharge, validate.DateLimit)
+			return ctx.Edit(text, button)
 		}
-		return ctx.Edit(`〽️ نام پلن: 15 گیگ
-        ➖➖➖➖➖➖➖
-        💎 قیمت پنل : 38,000 تومان
-        ➖➖➖➖➖➖➖`, &telebot.ReplyMarkup{
-			InlineKeyboard: [][]telebot.InlineButton{
-				{
-					{
-						Text: "کارت به کارت 🏦",
-						Data: "send",
-					},
-				},
-				{
-					{
-						Text: "👝 پرداخت با کیف پول",
-						Data: "paywallet",
-					},
-				},
-			},
-		})
+		text, button := inlinebutton.DateLimitList()
+		return ctx.Edit(text, button)
 
 	case "20":
 		dataCache := rdb.GetDel(ctxb, fmt.Sprint(userData.ID))
 		validate := validator.Validate(dataCache.String(), userIDstr)
 		if validate.Buy {
 			validate.DataLimitCharge = "20GB"
-			validate.Price = 50000
+			if validate.Manager {
+				validate.Price = 20000
+			} else {
+				validate.Price = 50000
+			}
 			err := rdb.Set(ctxb, fmt.Sprint(userData.ID), validate, time.Duration(1*time.Hour))
 			if err != nil {
-				log.Println(err)
+				log.Info(err)
 			}
 		}
 
 		if validate.Recharge {
 			validate.DataLimitCharge = "20GB"
-			validate.Price = 50000
+			if validate.Manager {
+				validate.Price = 20000
+			} else {
+				validate.Price = 50000
+			}
 			err := rdb.Set(ctxb, fmt.Sprint(userData.ID), validate, time.Duration(1*time.Hour))
 			if err != nil {
-				log.Println(err)
+				log.Info(err)
 			}
+
+			text, button := inlinebutton.Checkout(validate.Price, validate.DataLimitCharge, validate.DateLimit)
+			return ctx.Edit(text, button)
 		}
-		return ctx.Edit(`〽️ نام پلن: 20 گیگ
-        ➖➖➖➖➖➖➖
-        💎 قیمت پنل : 50,000 تومان
-        ➖➖➖➖➖➖➖`, &telebot.ReplyMarkup{
-			InlineKeyboard: [][]telebot.InlineButton{
-				{
-					{
-						Text: "کارت به کارت 🏦",
-						Data: "send",
-					},
-				},
-				{
-					{
-						Text: "👝 پرداخت با کیف پول",
-						Data: "paywallet",
-					},
-				},
-			},
-		})
+		text, button := inlinebutton.DateLimitList()
+		return ctx.Edit(text, button)
 
 	case "50":
 		dataCache := rdb.GetDel(ctxb, fmt.Sprint(userData.ID))
 		validate := validator.Validate(dataCache.String(), userIDstr)
 		if validate.Buy {
 			validate.DataLimitCharge = "50GB"
-			validate.Price = 120000
+			if validate.Manager {
+				validate.Price = 50000
+			} else {
+				validate.Price = 120000
+			}
 			err := rdb.Set(ctxb, fmt.Sprint(userData.ID), validate, time.Duration(1*time.Hour))
 			if err != nil {
-				log.Println(err)
+				log.Info(err)
 			}
 		}
 
 		if validate.Recharge {
 			validate.DataLimitCharge = "50GB"
-			validate.Price = 120000
+			if validate.Manager {
+				validate.Price = 50000
+			} else {
+				validate.Price = 120000
+			}
 			err := rdb.Set(ctxb, fmt.Sprint(userData.ID), validate, time.Duration(1*time.Hour))
 			if err != nil {
-				log.Println(err)
+				log.Info(err)
 			}
+
+			text, button := inlinebutton.Checkout(validate.Price, validate.DataLimitCharge, validate.DateLimit)
+			return ctx.Edit(text, button)
 		}
-		return ctx.Edit(`〽️ نام پلن: 50 گیگ
-        ➖➖➖➖➖➖➖
-        💎 قیمت پنل : 120,000 تومان
-        ➖➖➖➖➖➖➖`, &telebot.ReplyMarkup{
-			InlineKeyboard: [][]telebot.InlineButton{
-				{
-					{
-						Text: "کارت به کارت 🏦",
-						Data: "send",
-					},
-				},
-				{
-					{
-						Text: "👝 پرداخت با کیف پول",
-						Data: "paywallet",
-					},
-				},
-			},
-		})
+		text, button := inlinebutton.DateLimitList()
+		return ctx.Edit(text, button)
 
 	case "100":
 		dataCache := rdb.GetDel(ctxb, fmt.Sprint(userData.ID))
 		validate := validator.Validate(dataCache.String(), userIDstr)
 		if validate.Buy {
 			validate.DataLimitCharge = "100GB"
-			validate.Price = 180000
+			if validate.Manager {
+				validate.Price = 100000
+			} else {
+				validate.Price = 180000
+			}
 			err := rdb.Set(ctxb, fmt.Sprint(userData.ID), validate, time.Duration(1*time.Hour))
 			if err != nil {
-				log.Println(err)
+				log.Info(err)
 			}
 		}
 
 		if validate.Recharge {
 			validate.DataLimitCharge = "100GB"
-			validate.Price = 180000
+			if validate.Manager {
+				validate.Price = 100000
+			} else {
+				validate.Price = 180000
+			}
 			err := rdb.Set(ctxb, fmt.Sprint(userData.ID), validate, time.Duration(1*time.Hour))
 			if err != nil {
-				log.Println(err)
+				log.Info(err)
+			}
+
+			text, button := inlinebutton.Checkout(validate.Price, validate.DataLimitCharge, validate.DateLimit)
+			return ctx.Edit(text, button)
+		}
+		text, button := inlinebutton.DateLimitList()
+		return ctx.Edit(text, button)
+
+	case "60":
+		dataCache := rdb.GetDel(ctxb, fmt.Sprint(userData.ID))
+		validate := validator.Validate(dataCache.String(), userIDstr)
+		if validate.Buy {
+			validate.DataLimitCharge = "60GB"
+			if validate.Manager {
+				validate.Price = 60000
+			} else {
+				validate.Price = 150000
+			}
+			err := rdb.Set(ctxb, fmt.Sprint(userData.ID), validate, time.Duration(1*time.Hour))
+			if err != nil {
+				log.Info(err)
 			}
 		}
-		return ctx.Edit(`〽️ نام پلن: 100 گیگ
-        ➖➖➖➖➖➖➖
-        💎 قیمت پنل : 180,000 تومان
-        ➖➖➖➖➖➖➖`, &telebot.ReplyMarkup{
-			InlineKeyboard: [][]telebot.InlineButton{
-				{
-					{
-						Text: "کارت به کارت 🏦",
-						Data: "send",
-					},
-				},
-				{
-					{
-						Text: "👝 پرداخت با کیف پول",
-						Data: "paywallet",
-					},
-				},
-			},
-		})
+
+		if validate.Recharge {
+			validate.DataLimitCharge = "60GB"
+			if validate.Manager {
+				validate.Price = 60000
+			} else {
+				validate.Price = 150000
+			}
+			err := rdb.Set(ctxb, fmt.Sprint(userData.ID), validate, time.Duration(1*time.Hour))
+			if err != nil {
+				log.Info(err)
+			}
+
+			text, button := inlinebutton.Checkout(validate.Price, validate.DataLimitCharge, validate.DateLimit)
+			return ctx.Edit(text, button)
+		}
+		text, button := inlinebutton.DateLimitList()
+		return ctx.Edit(text, button)
+
+	case "70":
+		dataCache := rdb.GetDel(ctxb, fmt.Sprint(userData.ID))
+		validate := validator.Validate(dataCache.String(), userIDstr)
+		if validate.Buy {
+			validate.DataLimitCharge = "70GB"
+			if validate.Manager {
+				validate.Price = 70000
+			} else {
+				validate.Price = 175000
+			}
+			err := rdb.Set(ctxb, fmt.Sprint(userData.ID), validate, time.Duration(1*time.Hour))
+			if err != nil {
+				log.Info(err)
+			}
+		}
+
+		if validate.Recharge {
+			validate.DataLimitCharge = "70GB"
+			if validate.Manager {
+				validate.Price = 70000
+			} else {
+				validate.Price = 175000
+			}
+			err := rdb.Set(ctxb, fmt.Sprint(userData.ID), validate, time.Duration(1*time.Hour))
+			if err != nil {
+				log.Info(err)
+			}
+
+			text, button := inlinebutton.Checkout(validate.Price, validate.DataLimitCharge, validate.DateLimit)
+			return ctx.Edit(text, button)
+		}
+		text, button := inlinebutton.DateLimitList()
+		return ctx.Edit(text, button)
+
+	case "80":
+		dataCache := rdb.GetDel(ctxb, fmt.Sprint(userData.ID))
+		validate := validator.Validate(dataCache.String(), userIDstr)
+		if validate.Buy {
+			validate.DataLimitCharge = "80GB"
+			if validate.Manager {
+				validate.Price = 80000
+			} else {
+				validate.Price = 200000
+			}
+			err := rdb.Set(ctxb, fmt.Sprint(userData.ID), validate, time.Duration(1*time.Hour))
+			if err != nil {
+				log.Info(err)
+			}
+		}
+
+		if validate.Recharge {
+			validate.DataLimitCharge = "80GB"
+			if validate.Manager {
+				validate.Price = 60000
+			} else {
+				validate.Price = 200000
+			}
+			err := rdb.Set(ctxb, fmt.Sprint(userData.ID), validate, time.Duration(1*time.Hour))
+			if err != nil {
+				log.Info(err)
+			}
+
+			text, button := inlinebutton.Checkout(validate.Price, validate.DataLimitCharge, validate.DateLimit)
+			return ctx.Edit(text, button)
+		}
+		text, button := inlinebutton.DateLimitList()
+		return ctx.Edit(text, button)
+
+	case "90":
+		dataCache := rdb.GetDel(ctxb, fmt.Sprint(userData.ID))
+		validate := validator.Validate(dataCache.String(), userIDstr)
+		if validate.Buy {
+			validate.DataLimitCharge = "90GB"
+			if validate.Manager {
+				validate.Price = 90000
+			} else {
+				validate.Price = 225000
+			}
+			err := rdb.Set(ctxb, fmt.Sprint(userData.ID), validate, time.Duration(1*time.Hour))
+			if err != nil {
+				log.Info(err)
+			}
+		}
+
+		if validate.Recharge {
+			validate.DataLimitCharge = "90GB"
+			if validate.Manager {
+				validate.Price = 90000
+			} else {
+				validate.Price = 225000
+			}
+			err := rdb.Set(ctxb, fmt.Sprint(userData.ID), validate, time.Duration(1*time.Hour))
+			if err != nil {
+				log.Info(err)
+			}
+
+			text, button := inlinebutton.Checkout(validate.Price, validate.DataLimitCharge, validate.DateLimit)
+			return ctx.Edit(text, button)
+		}
+		text, button := inlinebutton.DateLimitList()
+		return ctx.Edit(text, button)
 	}
+
 	return nil
 }
 

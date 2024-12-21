@@ -1,18 +1,18 @@
 package cache
 
 import (
-	"log"
 	"os"
 
+	"github.com/charmbracelet/log"
 	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
 )
 
-// NewCache creates a new redis client
+// NewCache create a new redis client
 func NewCache() *redis.Client {
 	err := godotenv.Load(".env")
 	if err != nil {
-		log.Fatal("Can't load cache environment file")
+		log.Error("Can't load cache environment file", err)
 	}
 
 	rdb := redis.NewClient(&redis.Options{
@@ -20,5 +20,7 @@ func NewCache() *redis.Client {
 		Password: os.Getenv("CACHE_PASSWORD"),
 		DB:       0, // use default DB
 	})
+
+	log.Debug("Connected to redis.")
 	return rdb
 }

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/itpourya/Haze/app/validator"
 	"io"
 	"log"
 	"net/http"
@@ -19,8 +18,8 @@ import (
 )
 
 type Marzban interface {
-	CreateUserAccount(userID string, dataLimit int) (serializer.Response, error)
-	GetUser(userID string) (serializer.Response, string, error)
+	CreateMarzbanUser(userID string, dataLimit int, dateLimit string) (serializer.Response, error)
+	GetMarzbanUser(userID string) (serializer.Response, string, error)
 	ExpireUpdate(userID string) error
 	DataLimitUpdate(userID string, charge string) error
 }
@@ -36,13 +35,13 @@ func NewMarzbanClient() Marzban {
 	return &marzban{}
 }
 
-func (m *marzban) CreateUserAccount(username string, dataLimit int) (serializer.Response, error) {
-	expire := fmt.Sprint(CreateTime())
+func (m *marzban) CreateMarzbanUser(username string, dataLimit int, dateLimit string) (serializer.Response, error) {
+	expire := fmt.Sprint(CreateTime(dateLimit))
 	limit := strconv.Itoa(GenerateData(dataLimit))
 	var resp *http.Response
 	var response serializer.Response
 
-	userFound, token, err := m.GetUser(username)
+	userFound, token, err := m.GetMarzbanUser(username)
 	if err != nil {
 		return response, err
 	}
@@ -93,21 +92,16 @@ func (m *marzban) CreateUserAccount(username string, dataLimit int) (serializer.
 			log.Println(err)
 		}
 	}(resp.Body)
+
 	return response, nil
 }
 
-func (m *marzban) GetUser(username string) (serializer.Response, string, error) {
+func (m *marzban) GetMarzbanUser(username string) (serializer.Response, string, error) {
 	var resp *http.Response
 	var response serializer.Response
 	var token string
 
-	data := rdp.Get(ctxb, "TOKEN")
-	if strings.HasPrefix(data.String(), "redis") {
-		token, _ = auth()
-	} else {
-		token = fmt.Sprint(validator.ValidateAuth(data.String()))
-	}
-
+	token, _ = auth()
 	req, err := http.NewRequest("GET", API_GET_USER+username, nil)
 	if err != nil {
 		log.Println(err)
@@ -143,14 +137,25 @@ func (m *marzban) GetUser(username string) (serializer.Response, string, error) 
 
 func (m *marzban) ExpireUpdate(userID string) error {
 	var resp *http.Response
-	user, token, _ := m.GetUser(userID)
-	expire := chargeMonth(user.Expire)
+	user, token, _ := m.GetMarzbanUser(userID)
+	expire := fmt.Sprint(chargeMonth(user.Expire))
 	client := &http.Client{}
 
-	user.Expire = expire
-	user.Status = "active"
-
-	data := strings.NewReader(fmt.Sprint(user))
+	data := strings.NewReader(`{
+			 "proxies": {
+			   "vless": {}
+			 },
+			 "inbounds": {
+			   "vless": []
+			 },
+			 "expire": ` + expire + `,
+			 "data_limit": ` + fmt.Sprint(user.DataLimit) + `,
+			 "data_limit_reset_strategy": "no_reset",
+			 "status": "active",
+			 "note": "",
+			 "on_hold_timeout": "2023-11-03T20:30:00",
+			 "on_hold_expire_duration": 0
+			}`)
 
 	req, err := http.NewRequest("PUT", API_GET_USER+userID, data)
 	if err != nil {
@@ -180,13 +185,24 @@ func (m *marzban) ExpireUpdate(userID string) error {
 
 func (m *marzban) DataLimitUpdate(username string, charge string) error {
 	var resp *http.Response
-	user, token, _ := m.GetUser(username)
+	user, token, _ := m.GetMarzbanUser(username)
 	client := &http.Client{}
 
-	user.DataLimit = chargeDataLimit(user.DataLimit, charge)
-	user.Status = "active"
-
-	data := strings.NewReader(fmt.Sprint(user))
+	data := strings.NewReader(`{
+			 "proxies": {
+			   "vless": {}
+			 },
+			 "inbounds": {
+			   "vless": []
+			 },
+			 "expire": ` + fmt.Sprint(user.Expire) + `,
+			 "data_limit": ` + fmt.Sprint(chargeDataLimit(user.DataLimit, charge)) + `,
+			 "data_limit_reset_strategy": "no_reset",
+			 "status": "active",
+			 "note": "",
+			 "on_hold_timeout": "2023-11-03T20:30:00",
+			 "on_hold_expire_duration": 0
+			}`)
 
 	req, err := http.NewRequest("PUT", API_GET_USER+username, data)
 	if err != nil {
@@ -227,8 +243,32 @@ func chargeDataLimit(dataLimit int64, charge string) int64 {
 		return dataLimit + DATA_LIMIT_20GB
 	}
 
+	if charge == "30GB" {
+		return dataLimit + DATA_LIMIT_30GB
+	}
+
+	if charge == "40GB" {
+		return dataLimit + DATA_LIMIT_40GB
+	}
+
 	if charge == "50GB" {
 		return dataLimit + DATA_LIMIT_50GB
+	}
+
+	if charge == "70GB" {
+		return dataLimit + DATA_LIMIT_70GB
+	}
+
+	if charge == "80GB" {
+		return dataLimit + DATA_LIMIT_80GB
+	}
+
+	if charge == "90GB" {
+		return dataLimit + DATA_LIMIT_90GB
+	}
+
+	if charge == "100GB" {
+		return dataLimit + DATA_LIMIT_100GB
 	}
 
 	return dataLimit + DATA_LIMIT_100GB
@@ -275,9 +315,29 @@ func auth() (string, error) {
 	return jsonData.AccessToen, nil
 }
 
-func CreateTime() int64 {
+func CreateTime(month string) int64 {
 	now := time.Now()
-	futureDate := now.AddDate(0, 1, 0)
+	var futureDate time.Time
+
+	if month == "1" {
+		futureDate = now.AddDate(0, 1, 0)
+	}
+	if month == "2" {
+		futureDate = now.AddDate(0, 2, 0)
+	}
+	if month == "3" {
+		futureDate = now.AddDate(0, 3, 0)
+	}
+	if month == "4" {
+		futureDate = now.AddDate(0, 4, 0)
+	}
+	if month == "5" {
+		futureDate = now.AddDate(0, 5, 0)
+	}
+	if month == "6" {
+		futureDate = now.AddDate(0, 6, 0)
+	}
+
 	timestamp := time.Date(futureDate.Year(), futureDate.Month(), futureDate.Day(), 0, 0, 0, 0, time.UTC)
 
 	t := timestamppb.New(timestamp).Seconds
@@ -295,6 +355,30 @@ func GenerateData(dataLimit int) int {
 
 	if dataLimit == 20 {
 		return DATA_LIMIT_20GB
+	}
+
+	if dataLimit == 30 {
+		return DATA_LIMIT_30GB
+	}
+
+	if dataLimit == 40 {
+		return DATA_LIMIT_40GB
+	}
+
+	if dataLimit == 60 {
+		return DATA_LIMIT_60GB
+	}
+
+	if dataLimit == 70 {
+		return DATA_LIMIT_70GB
+	}
+
+	if dataLimit == 80 {
+		return DATA_LIMIT_80GB
+	}
+
+	if dataLimit == 90 {
+		return DATA_LIMIT_90GB
 	}
 
 	if dataLimit == 50 {

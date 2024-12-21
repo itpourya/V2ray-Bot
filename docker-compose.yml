@@ -22,19 +22,6 @@ services:
     networks:
       - hazenet
 
-  app:
-    build: .
-    container_name: hazebot
-    depends_on:
-      - cache
-      - db
-    links:
-      - cache
-      - db
-    restart: always
-    networks:
-      - hazenet
-
 networks:
   hazenet:
     driver: bridge

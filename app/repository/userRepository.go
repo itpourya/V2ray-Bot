@@ -2,19 +2,25 @@ package repository
 
 import (
 	"errors"
-	"log"
 
+	"github.com/charmbracelet/log"
 	"github.com/itpourya/Haze/app/entity"
 	"gorm.io/gorm"
 )
 
 type APIrepository interface {
-	CreateUser(userID string, userSub string) error
-	GetUser(userID string) []entity.User
-	IncreseBalance(userID string, charge int) error
-	CreateWallet(userID string) error
-	GetWallet(userID string) entity.Wallet
-	DecreaseBalance(userID string, amount int) error
+	RegisterUser(userID string, userSub string) error
+	GetUserConfigsAccount(userID string) []entity.User
+	IncreseUserBalance(userID string, charge int) error
+	CreateUserWallet(userID string) error
+	GetUserWallet(userID string) entity.Wallet
+	DecreaseUserBalance(userID string, amount int) error
+	CreateManager(userID string) error
+	GetManager(userID string) entity.Manager
+	IncreaseManagerDept(userID string, price int64) bool
+	ClearManagerDept(userID string) bool
+	GetInvoice(userID string) int64
+	GetManagerList() []entity.Manager
 }
 
 type apiRepository struct {
@@ -27,82 +33,183 @@ func NewRepository(conn *gorm.DB) APIrepository {
 	}
 }
 
-func (marz *apiRepository) CreateUser(userID string, userSub string) error {
-	var user entity.User
-	user.UserID = userID
-	user.UsernameSub = userSub
+func (session *apiRepository) GetManagerList() []entity.Manager {
+	var manager []entity.Manager
 
-	marz.db.Save(&user)
-
-	return nil
-}
-
-func (marz *apiRepository) GetUser(userID string) []entity.User {
-	var user []entity.User
-
-	_ = marz.db.Model(&entity.User{}).Where("user_id = ?", userID).Find(&user)
-
-	return user
-}
-
-func (marz *apiRepository) IncreseBalance(userID string, charge int) error {
-	walletExist := marz.GetWallet(userID)
-
-	if walletExist.UserID != userID {
-		marz.CreateWallet(userID)
-		walletExist = marz.GetWallet(userID)
+	err := session.db.Find(&manager)
+	if err.Error != nil {
+		log.Error("Repository Error", err.Error)
 	}
 
-	walletExist.Balance += int64(charge)
-	err := marz.db.Model(&entity.Wallet{}).Where("user_id = ?", userID).Update("balance", walletExist.Balance)
-	if err != nil {
+	return manager
+}
+
+func (session *apiRepository) GetInvoice(userID string) int64 {
+	var manager entity.Manager
+
+	err := session.db.Where("user_id = ?", userID).Find(&manager)
+	if err.Error != nil {
+		log.Error("Repository Error", err.Error)
+	}
+
+	return manager.Dept
+}
+
+func (session *apiRepository) ClearManagerDept(userID string) bool {
+	var manager entity.Manager
+
+	err := session.db.Where("user_id = ?", userID).Find(&manager)
+	if err.Error != nil {
+		log.Error("Repository Error", err.Error)
+		return false
+	}
+
+	manager.Dept = 0
+
+	err = session.db.Save(manager)
+	if err.Error != nil {
+		log.Error("Repository Error", err.Error)
+		return false
+	}
+
+	return true
+}
+
+func (session *apiRepository) IncreaseManagerDept(userID string, price int64) bool {
+	var manager entity.Manager
+
+	err := session.db.Where("user_id = ?", userID).Find(&manager)
+	if err.Error != nil {
+		log.Error("Repository Error", err.Error)
+		return false
+	}
+
+	manager.Dept += price
+
+	err = session.db.Save(manager)
+	if err.Error != nil {
+		log.Error("Repository Error", err.Error)
+		return false
+	}
+
+	return true
+}
+
+func (session *apiRepository) GetManager(userID string) entity.Manager {
+	var manager entity.Manager
+
+	err := session.db.Where("user_id = ?", userID).Find(&manager)
+	if err.Error != nil {
+		log.Error("Repository Error", err.Error)
+	}
+
+	return manager
+}
+
+func (session *apiRepository) CreateManager(userID string) error {
+	var manager entity.Manager
+
+	manager.UserID = userID
+
+	err := session.db.Create(&manager)
+	if err.Error != nil {
+		log.Error("Repository Error", err.Error)
 		return err.Error
 	}
 
 	return nil
 }
 
-func (marz *apiRepository) DecreaseBalance(userID string, amount int) error {
-	walletExist := marz.GetWallet(userID)
+func (session *apiRepository) RegisterUser(userID string, userSub string) error {
+	var user entity.User
+	user.UserID = userID
+	user.UsernameSub = userSub
+
+	err := session.db.Save(&user)
+	if err.Error != nil {
+		log.Error("Repository Error", err.Error)
+		return err.Error
+	}
+
+	return nil
+}
+
+func (session *apiRepository) GetUserConfigsAccount(userID string) []entity.User {
+	var user []entity.User
+
+	err := session.db.Model(&entity.User{}).Where("user_id = ?", userID).Find(&user)
+	if err.Error != nil {
+		log.Error("Repository Error", err.Error)
+	}
+
+	return user
+}
+
+func (session *apiRepository) IncreseUserBalance(userID string, charge int) error {
+	walletExist := session.GetUserWallet(userID)
 
 	if walletExist.UserID != userID {
+		session.CreateUserWallet(userID)
+		walletExist = session.GetUserWallet(userID)
+	}
+
+	walletExist.Balance += int64(charge)
+	err := session.db.Model(&entity.Wallet{}).Where("user_id = ?", userID).Update("balance", walletExist.Balance)
+	if err.Error != nil {
+		log.Error("Repository Error", err.Error)
+		return err.Error
+	}
+
+	return nil
+}
+
+func (session *apiRepository) DecreaseUserBalance(userID string, amount int) error {
+	walletExist := session.GetUserWallet(userID)
+
+	if walletExist.UserID != userID {
+		log.Error("Repository Error", "User wallet not found.")
 		return errors.New("wallet not found")
 	}
 
 	walletExist.Balance -= int64(amount)
 	if walletExist.Balance < 0 {
+		log.Error("User wallet is not enough.")
 		return errors.New("user can not pay with wallet")
 	}
-	err := marz.db.Model(&entity.Wallet{}).Where("user_id = ?", userID).Update("balance", walletExist.Balance)
-	if err != nil {
-		return err.Error
+	err := session.db.Model(&entity.Wallet{}).Where("user_id = ?", userID).Update("balance", walletExist.Balance)
+	if err.Error != nil {
+		log.Error("Repository Error", err.Error)
 	}
 
 	return nil
 }
 
-func (marz *apiRepository) CreateWallet(userID string) error {
+func (session *apiRepository) CreateUserWallet(userID string) error {
 	var wallet entity.Wallet
 
-	walletExist := marz.GetWallet(userID)
+	walletExist := session.GetUserWallet(userID)
 	if walletExist.UserID == userID {
+		log.Error("Repository Error", "User wallet not found.")
 		return errors.New("wallet found")
 	}
 
 	wallet.UserID = userID
 	wallet.Balance = 0
 
-	marz.db.Save(&wallet)
+	err := session.db.Save(&wallet)
+	if err.Error != nil {
+		log.Error("Repository Error", err.Error)
+	}
 
 	return nil
 }
 
-func (marz *apiRepository) GetWallet(userID string) entity.Wallet {
+func (session *apiRepository) GetUserWallet(userID string) entity.Wallet {
 	var wallet entity.Wallet
 
-	err := marz.db.Model(&entity.Wallet{}).Where("user_id = ?", userID).Take(&wallet)
-	if err != nil {
-		log.Println(err)
+	err := session.db.Model(&entity.Wallet{}).Where("user_id = ?", userID).Take(&wallet)
+	if err.Error != nil {
+		log.Error("Repository Error", err.Error)
 	}
 
 	return wallet

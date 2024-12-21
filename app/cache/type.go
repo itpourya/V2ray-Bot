@@ -1,6 +1,8 @@
 package cache
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 type CachePayload struct {
 	ConfigName      string
@@ -11,10 +13,12 @@ type CachePayload struct {
 	ReChargeWallet  bool
 	ChargeWallet    string
 	Price           int64
+	Manager         bool
+	DateLimit       string
 }
 
 type CacheAuthToken struct {
-  AuthToken           string
+	AuthToken string
 }
 
 func (i CachePayload) MarshalBinary() ([]byte, error) {

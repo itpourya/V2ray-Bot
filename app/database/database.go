@@ -2,9 +2,9 @@ package database
 
 import (
 	"fmt"
-	"log"
 	"os"
 
+	"github.com/charmbracelet/log"
 	"github.com/itpourya/Haze/app/entity"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
@@ -14,7 +14,7 @@ import (
 func New() *gorm.DB {
 	err := godotenv.Load(".env")
 	if err != nil {
-		log.Fatal("Can't load database environment file")
+		log.Error("Can't load database environment file", err)
 	}
 
 	connStr := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s TimeZone=Asia/Tehran", os.Getenv("DB_HOST"), os.Getenv("DB_USERNAME"), os.Getenv("DB_PASSWORD"), os.Getenv("DATABASE"), os.Getenv("DB_PORT"))
@@ -23,10 +23,14 @@ func New() *gorm.DB {
 		log.Fatal("NewDB: ", err)
 	}
 
-	err = db.AutoMigrate(&entity.Product{}, &entity.User{}, &entity.Wallet{})
+	log.Info("Connected to Database.")
+
+	err = db.AutoMigrate(&entity.Product{}, &entity.User{}, &entity.Wallet{}, &entity.Manager{})
 	if err != nil {
 		panic("Failed : Unable to migrate your sqlite database")
 	}
+
+	log.Info("Migrate database models.")
 
 	return db
 }
@@ -38,4 +42,6 @@ func Close() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	log.Info("Database closed.")
 }

@@ -29,6 +29,9 @@ WORKDIR /root/
 COPY .env .
 RUN chmod 644 .env
 
+# Set ownership of the .env file to the telebot user
+RUN chown telebot:telebot .env
+
 # Copy the built application from the builder stage
 COPY --from=builder /app/telebot .
 

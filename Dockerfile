@@ -35,9 +35,9 @@ COPY --from=builder /app/telebot .
 # Ensure the binary is executable
 RUN chmod +x ./telebot
 
-# Create a non-root user
-RUN addgroup --gid 1000 telebot
-RUN adduser --ingroup telebot --shell /bin/sh telebot
+# Create a non-root user without setting a password
+RUN addgroup --gid 1000 telebot \
+    && adduser --disabled-password --ingroup telebot --shell /bin/sh telebot
 USER telebot
 
 # Command to run the application

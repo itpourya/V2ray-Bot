@@ -22,15 +22,16 @@ RUN apk add --no-cache tzdata
 # Set the timezone environment variable
 ENV TZ=Asia/Tehran
 
+# Create a non-root user and group
+RUN addgroup --gid 1000 telebot \
+    && adduser --disabled-password --ingroup telebot --shell /bin/sh telebot
+
 # Set the working directory
 WORKDIR /root/
 
-# Copy the .env file and set proper permissions
+# Copy the .env file, set proper permissions, and set ownership to telebot
 COPY .env .
-RUN chmod 644 .env
-
-# Set ownership of the .env file to the telebot user
-RUN chown telebot:telebot .env
+RUN chmod 644 .env && chown telebot:telebot .env
 
 # Copy the built application from the builder stage
 COPY --from=builder /app/telebot .
@@ -38,9 +39,7 @@ COPY --from=builder /app/telebot .
 # Ensure the binary is executable
 RUN chmod +x ./telebot
 
-# Create a non-root user without setting a password
-RUN addgroup --gid 1000 telebot \
-    && adduser --disabled-password --ingroup telebot --shell /bin/sh telebot
+# Switch to the non-root user
 USER telebot
 
 # Command to run the application

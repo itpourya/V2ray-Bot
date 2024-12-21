@@ -35,8 +35,9 @@ COPY --from=builder /app/telebot .
 RUN chmod +x ./telebot
 
 # Create a non-root user
-RUN adduser -D appuser
-USER appuser
+RUN addgroup --gid 1000 telebot
+RUN adduser --ingroup telebot --shell /bin/sh telebot
+USER telebot
 
 # Command to run the application
 CMD ["./telebot"]

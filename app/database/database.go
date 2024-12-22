@@ -8,7 +8,7 @@ import (
 )
 
 func New() *gorm.DB {
-	connStr := "host=redzone-database user=admin password=redzoneadmin dbname=redzone_db port=5432 sslmode=disable TimeZone=Asia/Tehran"
+	connStr := "host=postgres user=admin password=redzoneadmin dbname=redzone_db port=5432 sslmode=disable TimeZone=Asia/Tehran"
 	db, err := gorm.Open(postgres.Open(connStr), &gorm.Config{})
 	if err != nil {
 		log.Fatal("NewDB: ", err)

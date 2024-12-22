@@ -1,6 +1,9 @@
 package cache
 
 import (
+	"context"
+	"time"
+
 	"github.com/charmbracelet/log"
 	"github.com/redis/go-redis/v9"
 )
@@ -12,6 +15,16 @@ func NewCache() *redis.Client {
 		Password: "eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81",
 		DB:       0, // use default DB
 	})
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	err := rdb.Ping(ctx).Err()
+	if err != nil {
+		log.Error("Failed to connect to Redis: %v", err)
+	} else {
+		log.Info("Successfully connected to Redis!")
+	}
 
 	log.Debug("Connected to redis.")
 	return rdb

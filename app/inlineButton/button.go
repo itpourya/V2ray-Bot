@@ -194,7 +194,7 @@ func InvoicePannel(dept int64) (string, *telebot.ReplyMarkup) {
 			},
 			{
 				{
-					Text: validateDept(dept),
+					Text: fmt.Sprint(dept) + " " + "تومان",
 				},
 			},
 		},
@@ -441,7 +441,7 @@ func AdminManagerPannel(manager entity.Manager) (string, *telebot.ReplyMarkup) {
 			},
 			{
 				{
-					Text: validateDept(manager.Dept) + " تومان",
+					Text: fmt.Sprint(manager.Dept) + " تومان",
 				},
 			},
 			{

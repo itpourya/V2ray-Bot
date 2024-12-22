@@ -1,7 +1,7 @@
 services:
   redis:
     container_name: haze_cache
-    image: redis:alpine
+    image: redis:latest
     restart: always
     ports:
       - "6379:6379"
@@ -11,7 +11,7 @@ services:
 
   postgres:
     container_name: haze_database
-    image: postgres:14
+    image: postgres:latest
     environment:
       POSTGRES_DB: haze_db
       POSTGRES_USER: admin

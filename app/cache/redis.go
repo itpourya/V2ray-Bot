@@ -26,6 +26,6 @@ func NewCache() *redis.Client {
 		log.Info("Successfully connected to Redis!")
 	}
 
-	log.Debug("Connected to redis.")
+	log.Info("Connected to redis.")
 	return rdb
 }

@@ -1,18 +1,27 @@
 services:
-  cache:
+  telegram-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - bot-network
+
+  redis:
     container_name: haze_cache
-    image: redis:latest
+    image: redis:alpine
     restart: always
     ports:
       - "6379:6379"
-    networks:
-      - hazenet
     command: redis-server --save 60 1 --loglevel warning --requirepass eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
-    volumes:
-      - cache:/data
-  db:
+    networks:
+      - bot-network
+
+  postgres:
     container_name: haze_database
-    image: postgres:latest
+    image: postgres:14
     environment:
       POSTGRES_DB: haze_db
       POSTGRES_USER: admin
@@ -20,13 +29,8 @@ services:
     ports:
       - "5432:5432"
     networks:
-      - hazenet
+      - bot-network
 
 networks:
-  hazenet:
+  bot-network:
     driver: bridge
-
-volumes:
-  cache:
-    driver: local
-  psql_volume:

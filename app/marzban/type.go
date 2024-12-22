@@ -1,18 +1,14 @@
 package marzban
 
-import (
-	"os"
-)
-
 type Token struct {
 	AccessToen string `json:"access_token"`
 	TokenType  string `json:"token_type"`
 }
 
 var (
-	API_AUTH_URL    = os.Getenv("API_AUTH_URL")
-	API_CREATE_USER = os.Getenv("API_CREATE_USER")
-	API_GET_USER    = os.Getenv("API_GET_USER")
+	API_AUTH_URL    = "https://marz.redzedshop.ir:8000/api/admin/token"
+	API_CREATE_USER = "https://marz.redzedshop.ir:8000/api/user"
+	API_GET_USER    = "https://marz.redzedshop.ir:8000/api/user/"
 )
 
 const (

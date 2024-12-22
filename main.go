@@ -1,13 +1,11 @@
 package main
 
 import (
-	"os"
-
 	"github.com/itpourya/Haze/app"
 )
 
 func main() {
-	tgApp := app.GenerateAPP(os.Getenv("TOKEN"))
+	tgApp := app.GenerateAPP("7394922553:AAHow5sFxgLnzIaJHXNXPHBpiVwYq_Cr8ao")
 
 	go tgApp.Start()
 

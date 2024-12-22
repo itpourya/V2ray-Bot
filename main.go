@@ -5,7 +5,7 @@ import (
 )
 
 func main() {
-	tgApp := app.GenerateAPP("7394922553:AAHow5sFxgLnzIaJHXNXPHBpiVwYq_Cr8ao")
+	tgApp := app.GenerateAPP("8063671366:AAG10SKs-3sWVSMocRimuBuepZjPQ94fZFU")
 
 	go tgApp.Start()
 

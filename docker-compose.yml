@@ -4,6 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: redzone-bot
+    restart: always
     depends_on:
       - redis
       - postgres

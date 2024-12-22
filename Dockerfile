@@ -42,7 +42,7 @@ RUN chmod +x ./redzone
 # Switch to the non-root user
 USER redzone
 
-ENV TOKEN="7394922553:AAHow5sFxgLnzIaJHXNXPHBpiVwYq_Cr8ao"
+ENV TOKEN="6466071910:AAEkVNnmsVrnfSmDfpmeEcSR-tT4phRvgNY"
 
 # Command to run the application
 CMD ["./redzone"]

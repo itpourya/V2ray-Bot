@@ -2,8 +2,6 @@ package marzban
 
 import (
 	"os"
-
-	"github.com/joho/godotenv"
 )
 
 type Token struct {
@@ -12,7 +10,6 @@ type Token struct {
 }
 
 var (
-	_               = godotenv.Load(".env")
 	API_AUTH_URL    = os.Getenv("API_AUTH_URL")
 	API_CREATE_USER = os.Getenv("API_CREATE_USER")
 	API_GET_USER    = os.Getenv("API_GET_USER")

@@ -4,7 +4,6 @@ go 1.20
 
 require (
 	github.com/charmbracelet/log v0.4.0
-	github.com/joho/godotenv v1.5.1
 	github.com/redis/go-redis/v9 v9.6.1
 	golang.org/x/net v0.24.0
 	google.golang.org/protobuf v1.28.0

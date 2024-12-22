@@ -1,32 +1,45 @@
 services:
-  cache:
-    container_name: haze_cache
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: redzone-bot
+    depends_on:
+      - redis
+      - postgres
+    environment:
+      - TOKEN=${TOKEN}
+      - REDIS_HOST=redis
+      - POSTGRES_HOST=postgres
+    networks:
+      - bot-network
+  redis:
+    container_name: redzone-redis
     image: redis:latest
     restart: always
     ports:
       - "6379:6379"
     networks:
-      - hazenet
+      - bot-network
     command: redis-server --save 60 1 --loglevel warning --requirepass eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
     volumes:
-      - cache:/data
-  db:
-    container_name: haze_database
+      - redis:/data
+  postgres:
+    container_name: redzone-database
     image: postgres:latest
     environment:
-      POSTGRES_DB: haze_db
+      POSTGRES_DB: redzone_db
       POSTGRES_USER: admin
-      POSTGRES_PASSWORD: hazeasmin1234
+      POSTGRES_PASSWORD: redzoneadmin
     ports:
       - "5432:5432"
     networks:
-      - hazenet
+      - bot-network
 
 networks:
-  hazenet:
-    driver: bridge
+  bot-network:
 
 volumes:
-  cache:
+  redis:
     driver: local
   psql_volume:

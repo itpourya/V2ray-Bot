@@ -1,23 +1,14 @@
 package database
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/charmbracelet/log"
 	"github.com/itpourya/Haze/app/entity"
-	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 func New() *gorm.DB {
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Error("Can't load database environment file", err)
-	}
-
-	connStr := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s TimeZone=Asia/Tehran", os.Getenv("DB_HOST"), os.Getenv("DB_USERNAME"), os.Getenv("DB_PASSWORD"), os.Getenv("DATABASE"), os.Getenv("DB_PORT"))
+	connStr := "host=redzone-database user=admin password=redzoneadmin dbname=redzone_db port=5432 sslmode=disable TimeZone=Asia/Tehran"
 	db, err := gorm.Open(postgres.Open(connStr), &gorm.Config{})
 	if err != nil {
 		log.Fatal("NewDB: ", err)

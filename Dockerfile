@@ -11,7 +11,7 @@ RUN go mod download
 COPY . .
 
 # Build the application as a static binary
-RUN CGO_ENABLED=0 go build -o telebot . && ls -l /app
+RUN CGO_ENABLED=0 go build -o redzone .
 
 # Stage 2: Create a minimal image for the application
 FROM alpine:latest
@@ -42,5 +42,7 @@ RUN chmod +x ./telebot
 # Switch to the non-root user
 USER telebot
 
+ENV TOKEN="7394922553:AAHow5sFxgLnzIaJHXNXPHBpiVwYq_Cr8ao"
+
 # Command to run the application
-CMD ["./telebot"]
+CMD ["./redzone"]

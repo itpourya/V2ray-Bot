@@ -1,15 +1,16 @@
 services:
-  redis:
+  cache:
     container_name: haze_cache
     image: redis:latest
     restart: always
     ports:
       - "6379:6379"
-    command: redis-server --save 60 1 --loglevel warning --requirepass eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
     networks:
-      - bot-network
-
-  postgres:
+      - hazenet
+    command: redis-server --save 60 1 --loglevel warning --requirepass eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
+    volumes:
+      - cache:/data
+  db:
     container_name: haze_database
     image: postgres:latest
     environment:
@@ -19,8 +20,13 @@ services:
     ports:
       - "5432:5432"
     networks:
-      - bot-network
+      - hazenet
 
 networks:
-  bot-network:
+  hazenet:
     driver: bridge
+
+volumes:
+  cache:
+    driver: local
+  psql_volume:

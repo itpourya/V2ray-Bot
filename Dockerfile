@@ -23,24 +23,24 @@ RUN apk add --no-cache tzdata
 ENV TZ=Asia/Tehran
 
 # Create a non-root user and group
-RUN addgroup --gid 1000 telebot \
-    && adduser --disabled-password --ingroup telebot --shell /bin/sh telebot
+RUN addgroup --gid 1000 redzone \
+    && adduser --disabled-password --ingroup redzone --shell /bin/sh redzone
 
 # Set the working directory to a non-root directory
-WORKDIR /home/telebot
+WORKDIR /home/redzone
 
 # Copy the .env file, set proper permissions, and set ownership to telebot
 COPY .env .
-RUN chmod 644 .env && chown telebot:telebot .env
+RUN chmod 644 .env && chown redzone:redzone .env
 
 # Copy the built application from the builder stage
-COPY --from=builder /app/telebot .
+COPY --from=builder /app/redzone .
 
 # Ensure the binary is executable
-RUN chmod +x ./telebot
+RUN chmod +x ./redzone
 
 # Switch to the non-root user
-USER telebot
+USER redzone
 
 ENV TOKEN="7394922553:AAHow5sFxgLnzIaJHXNXPHBpiVwYq_Cr8ao"
 

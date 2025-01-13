@@ -1,26 +1,28 @@
-package app
+package bot
 
 import (
 	"context"
 	"fmt"
+	cache2 "github.com/itpourya/Haze/internal/cache"
+	"github.com/itpourya/Haze/internal/database"
+	"github.com/itpourya/Haze/internal/inlineButton"
+	"github.com/itpourya/Haze/internal/marzban"
+	"github.com/itpourya/Haze/internal/repository"
+	"github.com/itpourya/Haze/internal/service"
+	"github.com/itpourya/Haze/internal/validator"
+	"github.com/itpourya/Haze/pkg/utils"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/charmbracelet/log"
-	"github.com/itpourya/Haze/app/cache"
-	"github.com/itpourya/Haze/app/database"
-	inlinebutton "github.com/itpourya/Haze/app/inlineButton"
-	"github.com/itpourya/Haze/app/marzban"
-	"github.com/itpourya/Haze/app/repository"
-	"github.com/itpourya/Haze/app/service"
-	"github.com/itpourya/Haze/app/validator"
 	"gopkg.in/telebot.v3"
 )
 
 var (
 	mrz            = marzban.NewMarzbanClient()
-	rdb            = cache.NewCache()
+	rdb            = cache2.NewCache()
 	ctxb           = context.Background()
 	db             = database.New()
 	userRepository = repository.NewRepository(db)
@@ -30,13 +32,13 @@ var (
 func start(ctx telebot.Context) error {
 	sender := strconv.Itoa(int(ctx.Sender().ID))
 
-	if IsManager(sender) {
+	if utils.IsManager(sender, userService) {
 		text, button := inlinebutton.ManagerPannel()
 
 		return ctx.Send(text, button)
 	}
 
-	if IsAdmin(sender) {
+	if utils.IsAdmin(sender) {
 		text, button := inlinebutton.AdminPannel()
 
 		return ctx.Send(text, button)
@@ -54,6 +56,12 @@ func start(ctx telebot.Context) error {
 func text(ctx telebot.Context) error {
 	data := rdb.GetDel(ctxb, fmt.Sprint(ctx.Sender().ID))
 	validate := validator.Validate(data.String(), fmt.Sprint(ctx.Sender().ID))
+	pattern := `^\d+\|[a-zA-Z]+$`
+
+	re, err := regexp.Compile(pattern)
+	if err != nil {
+		log.Error("Error compiling regex", err)
+	}
 
 	if validate.ReChargeWallet {
 		validate.ChargeWallet = ctx.Text()
@@ -63,6 +71,16 @@ func text(ctx telebot.Context) error {
 		}
 		return ctx.Send(inlinebutton.Settlement())
 	}
+
+	if re.MatchString(ctx.Text()) {
+		data := strings.Split(ctx.Text(), "|")
+		TargetUserID := data[0]
+		TargetUserOwnerName := data[1]
+
+		userService.EnterConfigOwnerNameService(TargetUserOwnerName, TargetUserID)
+		return ctx.Send("Changed.")
+	}
+
 	return ctx.Send("خیلی ببخشید ولی نفهمیدم چی میخواین 🤔")
 }
 
@@ -70,7 +88,12 @@ func inline(ctx telebot.Context) error {
 	command := ctx.Data()
 	userData := ctx.Sender()
 	userIDstr := strconv.Itoa(int(userData.ID))
-	AdminrecipientID := int64(6556338275)
+	AdminUserID := int64(6556338275)
+
+	if command == "EnterOwnerName" {
+		ctx.Send("لطفا اسم صاحب کانفیگ را بهمراه ایدی کاربر بصورت زیر وارد کنید\nId+username")
+		return nil
+	}
 
 	if command == "ShowManagerList" {
 		managersList := userService.GetManagerListService()
@@ -116,7 +139,7 @@ func inline(ctx telebot.Context) error {
 	}
 
 	if command == "CheckManager" {
-		manager := IsManager(userIDstr)
+		manager := utils.IsManager(userIDstr, userService)
 		if manager {
 			data := rdb.GetDel(ctxb, userIDstr).String()
 			validate := validator.Validate(data, fmt.Sprint(userIDstr))
@@ -163,7 +186,7 @@ func inline(ctx telebot.Context) error {
 	}
 
 	if command == "ManagerBuy" {
-		var payload cache.CachePayload
+		var payload cache2.CachePayload
 		payload.Buy = true
 		payload.Manager = true
 		err := rdb.Set(ctxb, fmt.Sprint(userData.ID), payload, time.Duration(1*time.Hour))
@@ -178,7 +201,7 @@ func inline(ctx telebot.Context) error {
 	if command == "sell" {
 		text := inlinebutton.ManagerAnswer()
 
-		ctx.Bot().Send(&telebot.Chat{ID: AdminrecipientID}, "Manager : "+userIDstr+" | "+userData.Username, &telebot.ReplyMarkup{
+		ctx.Bot().Send(&telebot.Chat{ID: AdminUserID}, "Manager : "+userIDstr+" | "+userData.Username, &telebot.ReplyMarkup{
 			InlineKeyboard: [][]telebot.InlineButton{
 				{
 					{
@@ -263,7 +286,7 @@ func inline(ctx telebot.Context) error {
 	}
 
 	if command == "charge" {
-		var payload cache.CachePayload
+		var payload cache2.CachePayload
 		payload.Buy = false
 		payload.ReChargeWallet = true
 		payload.Recharge = false
@@ -330,8 +353,8 @@ func inline(ctx telebot.Context) error {
 	}
 
 	if strings.HasPrefix(command, "retraffic") {
-		var payload cache.CachePayload
-		manager := IsManager(userIDstr)
+		var payload cache2.CachePayload
+		manager := utils.IsManager(userIDstr, userService)
 		if manager {
 			payload.Manager = true
 		}
@@ -366,8 +389,8 @@ func inline(ctx telebot.Context) error {
 	}
 
 	if strings.HasPrefix(command, "remonth") {
-		var payload cache.CachePayload
-		manager := IsManager(userIDstr)
+		var payload cache2.CachePayload
+		manager := utils.IsManager(userIDstr, userService)
 		if manager {
 			payload.Manager = true
 			payload.Price = 15000
@@ -395,7 +418,7 @@ func inline(ctx telebot.Context) error {
 	}
 
 	if command == "buy" {
-		var payload cache.CachePayload
+		var payload cache2.CachePayload
 		payload.Buy = true
 		err := rdb.Set(ctxb, fmt.Sprint(userData.ID), payload, time.Duration(1*time.Hour))
 		if err != nil {

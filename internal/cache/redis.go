@@ -2,6 +2,7 @@ package cache
 
 import (
 	"context"
+	"github.com/itpourya/Haze/config"
 	"time"
 
 	"github.com/charmbracelet/log"
@@ -11,8 +12,8 @@ import (
 // NewCache create a new redis client
 func NewCache() *redis.Client {
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     "redis:6379",
-		Password: "eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81",
+		Addr:     config.CACHE_ADR,
+		Password: config.CACHE_PASSWORD,
 		DB:       0, // use default DB
 	})
 
@@ -26,6 +27,5 @@ func NewCache() *redis.Client {
 		log.Info("Successfully connected to Redis!")
 	}
 
-	log.Info("Connected to redis.")
 	return rdb
 }

@@ -2,9 +2,8 @@ package validator
 
 import (
 	"encoding/json"
+	"github.com/itpourya/Haze/internal/cache"
 	"strings"
-
-	"github.com/itpourya/Haze/app/cache"
 )
 
 func Validate(data string, userID string) cache.CachePayload {

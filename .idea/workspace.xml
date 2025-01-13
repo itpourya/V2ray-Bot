@@ -5,19 +5,40 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="74c1a5c9-eaa4-4dea-849f-75b9ce550efd" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/config/config.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/cache/redis.go" beforeDir="false" afterPath="$PROJECT_DIR$/app/cache/redis.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/cache/type.go" beforeDir="false" afterPath="$PROJECT_DIR$/app/cache/type.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/marzban/marzban.go" beforeDir="false" afterPath="$PROJECT_DIR$/app/marzban/marzban.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/validator/validator.go" beforeDir="false" afterPath="$PROJECT_DIR$/app/validator/validator.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/app.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/bot/app.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/cache/redis.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/cache/redis.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/cache/type.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/cache/type.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/database/database.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/database/database.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/entity/adminModel.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/entity/adminModel.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/entity/productModel.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/entity/productModel.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/entity/userModel.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/entity/userModel.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/entity/walletModel.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/entity/walletModel.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/handler.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/bot/handler.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/inlineButton/button.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/inlineButton/button.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/marzban/marzban.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/marzban/marzban.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/marzban/type.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/marzban/type.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/repository/userRepository.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/repository/userRepository.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/serializer/createAccountSerializer.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/serializer/createAccountSerializer.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/service/userService.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/service/userService.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/utils.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/utils/utils.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/validator/validator.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/validator/validator.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Go File" />
+      </list>
+    </option>
   </component>
   <component name="GOROOT" url="file:///usr/lib/go" />
   <component name="Git.Settings">
@@ -28,6 +49,9 @@
   </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
+  </component>
+  <component name="OptimizeOnSaveOptions">
+    <option name="myRunOnSave" value="true" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 2
@@ -42,24 +66,35 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "DefaultGoTemplateProperty": "Go File",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.go.formatter.settings.were.checked": "true",
     "RunOnceActivity.go.migrated.go.modules.settings": "true",
     "RunOnceActivity.go.modules.go.list.on.any.changes.was.set": "true",
+    "ask.go.tool.to.install.GoGolangCILintTaskConsumer": "true",
     "git-widget-placeholder": "main",
     "go.import.settings.migrated": "true",
     "go.sdk.automatically.set": "true",
     "last_opened_file_path": "/home/genius/Desktop/repo/Haze",
     "node.js.detected.package.eslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm"
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "watcher.settings"
   }
 }]]></component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/internal" />
+      <recent name="$PROJECT_DIR$/internal/bot" />
+      <recent name="$PROJECT_DIR$/pkg/utils" />
+    </key>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-gosdk-5df93f7ad4aa-df9ad98b711f-org.jetbrains.plugins.go.sharedIndexes.bundled-GO-242.21829.165" />
-        <option value="bundled-js-predefined-d6986cc7102b-7c0b70fcd90d-JavaScript-GO-242.21829.165" />
+        <option value="bundled-gosdk-d297c17c1fbd-b87a2f8923ed-org.jetbrains.plugins.go.sharedIndexes.bundled-GO-243.21565.208" />
+        <option value="bundled-js-predefined-d6986cc7102b-e768b9ed790e-JavaScript-GO-243.21565.208" />
       </set>
     </attachedChunks>
   </component>

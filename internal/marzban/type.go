@@ -1,14 +1,16 @@
 package marzban
 
+import "github.com/itpourya/Haze/config"
+
 type Token struct {
 	AccessToen string `json:"access_token"`
 	TokenType  string `json:"token_type"`
 }
 
 var (
-	API_AUTH_URL    = "https://marz.redzedshop.ir:8000/api/admin/token"
-	API_CREATE_USER = "https://marz.redzedshop.ir:8000/api/user"
-	API_GET_USER    = "https://marz.redzedshop.ir:8000/api/user/"
+	API_AUTH_URL    = config.API_AUTH_URL
+	API_CREATE_USER = config.API_CREATE_USER
+	API_GET_USER    = config.API_GET_USER
 )
 
 const (

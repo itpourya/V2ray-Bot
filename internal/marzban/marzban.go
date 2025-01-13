@@ -1,10 +1,10 @@
 package marzban
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/itpourya/Haze/internal/serializer"
 	"io"
 	"log"
 	"net/http"
@@ -12,8 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/itpourya/Haze/app/cache"
-	"github.com/itpourya/Haze/app/serializer"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -24,10 +22,10 @@ type Marzban interface {
 	DataLimitUpdate(userID string, charge string) error
 }
 
-var (
-	ctxb = context.Background()
-	rdp  = cache.NewCache()
-)
+//var (
+//	ctxb = context.Background()
+//	rdp  = cache2.NewCache()
+//)
 
 type marzban struct{}
 
@@ -305,12 +303,12 @@ func auth() (string, error) {
 		}
 	}(resp.Body)
 
-	var cacheAuthToken cache.CacheAuthToken
-	cacheAuthToken.AuthToken = jsonData.AccessToen
-	cacheMsg := rdp.Set(ctxb, "TOKEN", cacheAuthToken, time.Duration(1*time.Hour))
-	if cacheMsg != nil {
-		log.Println(err)
-	}
+	//var cacheAuthToken cache2.CacheAuthToken
+	//cacheAuthToken.AuthToken = jsonData.AccessToen
+	//cacheMsg := rdp.Set(ctxb, "TOKEN", cacheAuthToken, time.Duration(1*time.Hour))
+	//if cacheMsg != nil {
+	//	log.Println(err)
+	//}
 
 	return jsonData.AccessToen, nil
 }

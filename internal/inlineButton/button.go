@@ -2,12 +2,12 @@ package inlinebutton
 
 import (
 	"fmt"
+	entity2 "github.com/itpourya/Haze/internal/entity"
+	"github.com/itpourya/Haze/internal/serializer"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/itpourya/Haze/app/entity"
-	"github.com/itpourya/Haze/app/serializer"
 	"gopkg.in/telebot.v3"
 )
 
@@ -290,7 +290,7 @@ func Locations() (string, *telebot.ReplyMarkup) {
 	return text, button
 }
 
-func WalletPannel(wallet entity.Wallet) (string, *telebot.ReplyMarkup) {
+func WalletPannel(wallet entity2.Wallet) (string, *telebot.ReplyMarkup) {
 	text := "میتونین میزان شارژ کیف پول خودتون رو ببینین 😊"
 	button := &telebot.ReplyMarkup{
 		InlineKeyboard: [][]telebot.InlineButton{
@@ -369,6 +369,12 @@ func ConfigPannel(userData serializer.Response) (string, *telebot.ReplyMarkup) {
 					Data: "retraffic" + configName,
 				},
 			},
+			{
+				{
+					Text: "Enter Owner Name",
+					Data: "EnterOwnerName",
+				},
+			},
 		},
 		OneTimeKeyboard: true,
 	}
@@ -376,19 +382,32 @@ func ConfigPannel(userData serializer.Response) (string, *telebot.ReplyMarkup) {
 	return text, button
 }
 
-func ConfigList(users []entity.User) (string, *telebot.ReplyMarkup) {
+func ConfigList(users []entity2.User) (string, *telebot.ReplyMarkup) {
 	text := "یکی از اکانت هاتو انتخاب کن 🤔"
 
 	userConfigsList := [][]telebot.InlineButton{}
 	for _, user := range users {
-		configsList := []telebot.InlineButton{
-			{
-				Text: "gt-" + user.UsernameSub,
-				Data: "gt-" + user.UsernameSub,
-			},
+		if user.OwnerName != "" {
+			configsList := []telebot.InlineButton{
+				{
+					Text: user.OwnerName,
+					Data: "gt-" + user.UsernameSub,
+				},
+			}
+
+			userConfigsList = append(userConfigsList, configsList)
 		}
 
-		userConfigsList = append(userConfigsList, configsList)
+		if user.OwnerName == "" {
+			configsList := []telebot.InlineButton{
+				{
+					Text: "gt-" + user.UsernameSub,
+					Data: "gt-" + user.UsernameSub,
+				},
+			}
+
+			userConfigsList = append(userConfigsList, configsList)
+		}
 	}
 
 	button := &telebot.ReplyMarkup{
@@ -399,7 +418,7 @@ func ConfigList(users []entity.User) (string, *telebot.ReplyMarkup) {
 	return text, button
 }
 
-func ManagerList(managers []entity.Manager) (string, *telebot.ReplyMarkup) {
+func ManagerList(managers []entity2.Manager) (string, *telebot.ReplyMarkup) {
 	text := "یکی از اکانت هاتو انتخاب کن 🤔"
 
 	managerList := [][]telebot.InlineButton{}
@@ -422,7 +441,7 @@ func ManagerList(managers []entity.Manager) (string, *telebot.ReplyMarkup) {
 	return text, button
 }
 
-func AdminManagerPannel(manager entity.Manager) (string, *telebot.ReplyMarkup) {
+func AdminManagerPannel(manager entity2.Manager) (string, *telebot.ReplyMarkup) {
 	text := "روش پرداخت رو انتخاب کن 🤔"
 	button := &telebot.ReplyMarkup{
 		InlineKeyboard: [][]telebot.InlineButton{

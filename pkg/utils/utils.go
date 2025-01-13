@@ -1,6 +1,10 @@
-package app
+package utils
 
-func IsManager(userID string) bool {
+import (
+	"github.com/itpourya/Haze/internal/service"
+)
+
+func IsManager(userID string, userService service.UserService) bool {
 	manager := userService.GetManagerService(userID)
 
 	if manager.UserID == userID {

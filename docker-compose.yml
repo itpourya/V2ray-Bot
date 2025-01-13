@@ -1,19 +1,4 @@
 services:
-  bot:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: redzone-bot
-    restart: always
-    depends_on:
-      - redis
-      - postgres
-    environment:
-      - TOKEN=${TOKEN}
-      - REDIS_HOST=redis
-      - POSTGRES_HOST=postgres
-    networks:
-      - bot-network
   redis:
     container_name: redzone-redis
     image: redis:latest
@@ -26,7 +11,7 @@ services:
     volumes:
       - redis:/data
   postgres:
-    container_name: redzone-database
+    container_name: postgres
     image: postgres:latest
     environment:
       POSTGRES_DB: redzone_db
@@ -36,6 +21,8 @@ services:
       - "5432:5432"
     networks:
       - bot-network
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
 networks:
   bot-network:
@@ -43,4 +30,4 @@ networks:
 volumes:
   redis:
     driver: local
-  psql_volume:
+  postgres_data:

@@ -11,7 +11,7 @@ RUN go mod download
 COPY . .
 
 # Build the application as a static binary
-RUN CGO_ENABLED=0 go build -o redzone .
+RUN CGO_ENABLED=0 go build -o redzone ./cmd/main.go
 
 # Stage 2: Create a minimal image for the application
 FROM alpine:latest
@@ -29,10 +29,6 @@ RUN addgroup --gid 1000 redzone \
 # Set the working directory to a non-root directory
 WORKDIR /home/redzone
 
-# Copy the .env file, set proper permissions, and set ownership to telebot
-COPY .env .
-RUN chmod 644 .env && chown redzone:redzone .env
-
 # Copy the built application from the builder stage
 COPY --from=builder /app/redzone .
 
@@ -42,7 +38,7 @@ RUN chmod +x ./redzone
 # Switch to the non-root user
 USER redzone
 
-ENV TOKEN="6466071910:AAEkVNnmsVrnfSmDfpmeEcSR-tT4phRvgNY"
+ENV TOKEN="7121293474:AAHPfmIZbIQ0ZsI7sgA0wMnxnZY33ymAy2s"
 
 # Command to run the application
 CMD ["./redzone"]

@@ -1,7 +1,7 @@
 package config
 
 const (
-	TOKEN          = "8063671366:AAG10SKs-3sWVSMocRimuBuepZjPQ94fZFU"
+	TOKEN          = "6466071910:AAEkVNnmsVrnfSmDfpmeEcSR-tT4phRvgNY"
 	DB_HOST        = "redzone-database"
 	DB_USERNAME    = "admin"
 	DB_PASSWORD    = "redzoneadmin"

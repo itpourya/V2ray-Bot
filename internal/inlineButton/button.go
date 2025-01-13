@@ -371,7 +371,7 @@ func ConfigPannel(userData serializer.Response) (string, *telebot.ReplyMarkup) {
 			},
 			{
 				{
-					Text: "Enter Owner Name",
+					Text: "اضافه کردن اسم برای کانفیگ 📇",
 					Data: "EnterOwnerName",
 				},
 			},

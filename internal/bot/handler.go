@@ -78,7 +78,7 @@ func text(ctx telebot.Context) error {
 		TargetUserOwnerName := data[1]
 
 		userService.EnterConfigOwnerNameService(TargetUserOwnerName, TargetUserID)
-		return ctx.Send("Changed.")
+		return ctx.Send("اسم کانفیگ تغییر یافت ✅\nمیتونی توی پنل در قسمت «کانفیگ های من» ببینیش 😋")
 	}
 
 	return ctx.Send("خیلی ببخشید ولی نفهمیدم چی میخواین 🤔")
@@ -91,7 +91,7 @@ func inline(ctx telebot.Context) error {
 	AdminUserID := int64(6556338275)
 
 	if command == "EnterOwnerName" {
-		ctx.Send("لطفا اسم صاحب کانفیگ را بهمراه ایدی کاربر بصورت زیر وارد کنید\nId+username")
+		ctx.Send("لطفا اسم صاحب کانفیگ را بهمراه ایدی کاربر بصورت زیر وارد کنید\n\n3333333333|USERNAME\n\nپینوشت : تلاش کنین حتما اسم رو به زبان انگلیسی وارد کنید")
 		return nil
 	}
 

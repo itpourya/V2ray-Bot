@@ -1,14 +1,14 @@
 package config
 
 const (
-	TOKEN          = "6466071910:AAEkVNnmsVrnfSmDfpmeEcSR-tT4phRvgNY"
-	DB_HOST        = "redzone-database"
-	DB_USERNAME    = "admin"
-	DB_PASSWORD    = "redzoneadmin"
-	DB_PORT        = "5432"
-	DATABASE       = "redzone_db"
+	TOKEN          = "TOKEN"
+	DB_HOST        = "HOST"
+	DB_USERNAME    = "USERNAME"
+	DB_PASSWORD    = "PASSWORD"
+	DB_PORT        = "PORT"
+	DATABASE       = "DATABASE"
 	CACHE_ADR      = "redzone-redis:6379"
-	CACHE_PASSWORD = "eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81"
+	CACHE_PASSWORD = "PASSWORD"
 
 	API_AUTH_URL    = "https://marz.redzedshop.ir:8000/api/admin/token"
 	API_CREATE_USER = "https://marz.redzedshop.ir:8000/api/user"
